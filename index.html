@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>March to Muscles - Photo Submission</title>
+    <style>
+        :root {
+            --primary-color: #007f2f; /* Irish green */
+            --secondary-color: #f6b60d; /* Gold */
+            --accent-color: #005226; /* Darker green */
+            --background-color: #e6f7ee; /* Light green background */
+            --white: #ffffff;
+            --light-gray: #f0f9f4;
+            --text-color: #284034;
+            --success-color: #28a745;
+            --gayle-color: #8e44ad;
+            --faber-color: #e74c3c;
+            --skibbie-color: #27ae60;
+            --mcintosh-color: #f39c12;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --error-color: #d9534f;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .page-container {
+            min-height: 100vh;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #e6f7ee 0%, #d0e8d4 100%);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2387c89c' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1:before {
+            content: '☘️';
+            position: absolute;
+            left: -1.5em;
+            top: 0;
+        }
+        
+        h1:after {
+            content: '☘️';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            height: auto;
+            background-color: transparent;
+        }
+        
+        h2.leaderboard-title {
+            color: var(--accent-color);
+            margin-top: 0;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dde1e5;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: var(--light-gray);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.2);
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-top: 10px;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-input-label:hover {
+            background-color: #ffca4f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        #photoInput {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        #fileName {
+            margin-left: 15px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0, 127, 47, 0.2);
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 127, 47, 0.25);
+        }
+        
+        .submit-btn:disabled {
+            background-color: #93c9a3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .preview-container {
+            margin: 25px 0;
+            text-align: center;
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #dde1e5;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            display: none;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .preview-placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .leaderboard {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #c6e6d2;
+        }
+        
+        .leaderboard-title {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .leaderboard-title:before {
+            content: '🏆';
+            position: absolute;
+            left: -1.5em;
+            top: 0;
+        }
+        
+        .chart-container {
+            margin-bottom: 30px;
+            background-color: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .bar-row {
+            display: flex;
+            align-items: center;
+        }
+        
+        .bar-label {
+            width: 100px;
+            text-align: right;
+            font-weight: 600;
+            padding-right: 15px;
+        }
+        
+        .bar-container {
+            flex-grow: 1;
+            height: 30px;
+            background-color: #e8f5ee;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .bar {
+            height: 100%;
+            width: 0;
+            transition: width 1s ease-in-out;
+            border-radius: 15px;
+        }
+        
+        .bar-gayle {
+            background: linear-gradient(to right, var(--gayle-color), #9b59b6);
+        }
+        
+        .bar-faber {
+            background: linear-gradient(to right, var(--faber-color), #e67e22);
+        }
+        
+        .bar-skibbie {
+            background: linear-gradient(to right, var(--skibbie-color), #2ecc71);
+        }
+        
+        .bar-mcintosh {
+            background: linear-gradient(to right, var(--mcintosh-color), #f1c40f);
+        }
+        
+        .bar-value {
+            padding-left: 10px;
+            font-weight: bold;
+            min-width: 40px;
+        }
+        
+        .team-stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        
+        .team-card {
+            flex: 1;
+            min-width: 160px;
+            padding: 25px 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s;
+            color: white;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .team-gayle {
+            background: linear-gradient(135deg, var(--gayle-color) 0%, #9b59b6 100%);
+        }
+        
+        .team-faber {
+            background: linear-gradient(135deg, var(--faber-color) 0%, #e67e22 100%);
+        }
+        
+        .team-skibbie {
+            background: linear-gradient(135deg, var(--skibbie-color) 0%, #2ecc71 100%);
+        }
+        
+        .team-mcintosh {
+            background: linear-gradient(135deg, var(--mcintosh-color) 0%, #f1c40f 100%);
+        }
+        
+        .team-card h3 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+        
+        .team-card p {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 15px 0 5px;
+        }
+        
+        .team-card span {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .success-message {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: none;
+            border-left: 4px solid var(--success-color);
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background-color: rgba(217, 83, 79, 0.1);
+            color: var(--error-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: none !important; /* Force hide */
+            border-left: 4px solid var(--error-color);
+            font-weight: 600;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .team-stats {
+                flex-wrap: wrap;
+            }
+            
+            .team-card {
+                flex-basis: calc(50% - 20px);
+                margin-bottom: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .team-card {
+                flex-basis: 100%;
+            }
+            
+            .page-container {
+                padding: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+            <header>
+                <h1>March to Muscles</h1>
+                <p>Submit your photos to earn points for your team! <span style="color: var(--accent-color); font-weight: bold;">Limit: 2 submissions per person per day</span></p>
+            </header>
+            
+            <div id="successMessage" class="success-message">
+                Your photo has been successfully submitted! Thank you for participating.
+            </div>
+            
+            <div id="errorMessage" class="error-message" style="display: none;">
+                You've already submitted 2 photos today. Please try again tomorrow!
+            </div>
+            
+            <form id="photoSubmissionForm">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <select id="name" name="name" required>
+                        <option value="">Select your name</option>
+                        <!-- The member names will be inserted here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team">Your Team:</label>
+                    <select id="team" name="team" required>
+                        <option value="">Select your team</option>
+                        <option value="Gayle">Gayle</option>
+                        <option value="Faber">Faber</option>
+                        <option value="Skibbie">Skibbie</option>
+                        <option value="Mcintosh">Mcintosh</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="photoInput">Upload Photo:</label>
+                    <div class="file-input-container">
+                        <label for="photoInput" class="file-input-label">Choose File</label>
+                        <input type="file" id="photoInput" name="photo" accept="image/*" required>
+                        <span id="fileName">No file chosen</span>
+                    </div>
+                </div>
+                
+                <div class="preview-container">
+                    <img id="imagePreview" src="#" alt="Preview">
+                    <div id="previewPlaceholder" class="preview-placeholder">Image preview will appear here</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Brief Description (optional):</label>
+                    <input type="text" id="description" name="description" placeholder="What are you doing in this photo?">
+                </div>
+                
+                <button type="submit" class="submit-btn">Submit Photo</button>
+            </form>
+            
+            <div class="leaderboard">
+                <h2 class="leaderboard-title">Team Leaderboard</h2>
+                
+                <div class="chart-container">
+                    <div class="bar-chart">
+                        <div class="bar-row">
+                            <div class="bar-label">Gayle</div>
+                            <div class="bar-container">
+                                <div id="barGayle" class="bar bar-gayle" style="width: 0%"></div>
+                            </div>
+                            <div id="barGayleValue" class="bar-value">0</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Faber</div>
+                            <div class="bar-container">
+                                <div id="barFaber" class="bar bar-faber" style="width: 0%"></div>
+                            </div>
+                            <div id="barFaberValue" class="bar-value">0</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Skibbie</div>
+                            <div class="bar-container">
+                                <div id="barSkibbie" class="bar bar-skibbie" style="width: 0%"></div>
+                            </div>
+                            <div id="barSkibbieValue" class="bar-value">0</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Mcintosh</div>
+                            <div class="bar-container">
+                                <div id="barMcintosh" class="bar bar-mcintosh" style="width: 0%"></div>
+                            </div>
+                            <div id="barMcintoshValue" class="bar-value">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="team-stats">
+                    <div class="team-card team-gayle">
+                        <h3>Gayle</h3>
+                        <p id="teamGayleCount">0</p>
+                        <span>submissions</span>
+                    </div>
+                    <div class="team-card team-faber">
+                        <h3>Faber</h3>
+                        <p id="teamFaberCount">0</p>
+                        <span>submissions</span>
+                    </div>
+                    <div class="team-card team-skibbie">
+                        <h3>Skibbie</h3>
+                        <p id="teamSkibbieCount">0</p>
+                        <span>submissions</span>
+                    </div>
+                    <div class="team-card team-mcintosh">
+                        <h3>Mcintosh</h3>
+                        <p id="teamMcintoshCount">0</p>
+                        <span>submissions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // Your Firebase configuration (replace with yours from the Firebase console)
+        const firebaseConfig = {
+  apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
+  authDomain: "march-to-muscles.firebaseapp.com",
+  projectId: "march-to-muscles",
+  storageBucket: "march-to-muscles.firebasestorage.app",
+  messagingSenderId: "591055422160",
+  appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
+  measurementId: "G-1Q4BDVWFX8"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const auth = firebase.auth();
+        
+        // Sign in anonymously (no user accounts needed)
+        auth.signInAnonymously().catch(error => {
+            console.error("Authentication error:", error);
+        });
+    </script>
+
+    <script>
+        // Initialize variables
+        let currentUser = null;
+
+        // Listen for authentication state
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                currentUser = user;
+                loadLeaderboardData();
+            }
+        });
+
+        // Member roster with all fraternity members
+        const memberRoster = [
+            {name: "Abrianna Reaves", team: ""},
+            {name: "Ahmed Elmahdi", team: ""},
+            {name: "Aidan Campbell", team: ""},
+            {name: "Aidan Walsh", team: ""},
+            {name: "Aidan Welch", team: ""},
+            {name: "Alessia Pesce", team: ""},
+            {name: "Alex Alleyne", team: ""},
+            {name: "Alex Mancuso", team: ""},
+            {name: "Allie Flynn", team: ""},
+            {name: "Amanda Collins", team: ""},
+            {name: "Anish Ghana", team: ""},
+            {name: "Antonio Kirylo", team: ""},
+            {name: "Arav Patel", team: ""},
+            {name: "Ashley Reynolds", team: ""},
+            {name: "Austin McIntosh", team: ""},
+            {name: "Ava Mollaghan", team: ""},
+            {name: "Ava Wickberg", team: ""},
+            {name: "Becca Moore", team: ""},
+            {name: "Benjamin Sheehan", team: ""},
+            {name: "Bobby Bammann", team: ""},
+            {name: "Brian Cohn", team: ""},
+            {name: "Brooke Thurman", team: ""},
+            {name: "Bry Hogan", team: ""},
+            {name: "Caitlin Croci", team: ""},
+            {name: "Caleb Dozier", team: ""},
+            {name: "Cam Overton", team: ""},
+            {name: "Carli Bowen", team: ""},
+            {name: "Caroline Harris", team: ""},
+            {name: "Chaz Faletti", team: ""},
+            {name: "Connor Autera", team: ""},
+            {name: "Connor Lowery", team: ""},
+            {name: "Cooper Johnston", team: ""},
+            {name: "Dalton Kahl", team: ""},
+            {name: "David Gerth", team: ""},
+            {name: "Delilah Mills", team: ""},
+            {name: "Dylan Cobb", team: ""},
+            {name: "Eli Chang", team: ""},
+            {name: "Emily Carr", team: ""},
+            {name: "Emma Blanton", team: ""},
+            {name: "Emma Fitzsimmons", team: ""},
+            {name: "Emme Muller", team: ""},
+            {name: "Emmet Johnson", team: ""},
+            {name: "Erin McCauley", team: ""},
+            {name: "Esri Lowe", team: ""},
+            {name: "Evan Hayden", team: ""},
+            {name: "Gabe Guisti", team: ""},
+            {name: "Gavin Farbman", team: ""},
+            {name: "Geoffrey Tocco", team: ""},
+            {name: "Grace Johnson", team: ""},
+            {name: "Grace Skibbie", team: ""},
+            {name: "Grantland Rogers", team: ""},
+            {name: "Hailey Hicks", team: ""},
+            {name: "Hanna Fay", team: ""},
+            {name: "Hunter Kahle", team: ""},
+            {name: "Ian Kirsch", team: ""},
+            {name: "Isabella Silvis", team: ""},
+            {name: "Jack Purcaro", team: ""},
+            {name: "Jackson Fanelli", team: ""},
+            {name: "Jacob Lotter", team: ""},
+            {name: "JP Patella", team: ""},
+            {name: "Julia Perri", team: ""},
+            {name: "Katie McMahon", team: ""},
+            {name: "Kharis Greear", team: ""},
+            {name: "Lauren Sebestyen", team: ""},
+            {name: "LiLi Gayle", team: ""},
+            {name: "Lucas Bruns", team: ""},
+            {name: "Luke Ribar", team: ""},
+            {name: "Mason Adams", team: ""},
+            {name: "Morgan Ellison", team: ""},
+            {name: "Nandini Wagle", team: ""},
+            {name: "Natalia Berti", team: ""},
+            {name: "Nick Fontanella", team: ""},
+            {name: "Nick Magnotta", team: ""},
+            {name: "Olivia Myers", team: ""},
+            {name: "Owings Holler", team: ""},
+            {name: "Quinn Lovette", team: ""},
+            {name: "Quintan Boyle", team: ""},
+            {name: "Rafael Freitas", team: ""},
+            {name: "Rahi Gajjar", team: ""},
+            {name: "Rishi Patel", team: ""},
+            {name: "Ryan Ayers", team: ""},
+            {name: "Ryan St.Clair", team: ""},
+            {name: "Ryan Trahan", team: ""},
+            {name: "Rylee Cauthren", team: ""},
+            {name: "Seth Gould", team: ""},
+            {name: "Sophia Hemsey", team: ""},
+            {name: "Stergos Trintis", team: ""},
+            {name: "Tanner Torrey", team: ""},
+            {name: "Taryn Chase", team: ""},
+            {name: "Tate Sweatt", team: ""},
+            {name: "Thelma Zaw", team: ""},
+            {name: "Tim Woodley", team: ""},
+            {name: "Tommy Marvin", team: ""},
+            {name: "Tyler Faber", team: ""},
+            {name: "VB Trost", team: ""}
+        ];
+
+        // Populate the name dropdown with the member roster
+        function populateNameDropdown() {
+            const nameDropdown = document.getElementById('name');
+            // Sort alphabetically by name
+            memberRoster.sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Add all members to dropdown
+            memberRoster.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.name;
+                option.textContent = member.name;
+                nameDropdown.appendChild(option);
+            });
+        }
+
+        // Load leaderboard data from Firebase
+        async function loadLeaderboardData() {
+            try {
+                const teamsRef = db.collection('teams');
+                const snapshot = await teamsRef.get();
+                
+                const teamCounts = {
+                    "Gayle": 0,
+                    "Faber": 0,
+                    "Skibbie": 0,
+                    "Mcintosh": 0
+                };
+                
+                snapshot.forEach(doc => {
+                    if (teamCounts.hasOwnProperty(doc.id)) {
+                        teamCounts[doc.id] = doc.data().count || 0;
+                    }
+                });
+                
+                updateLeaderboard(teamCounts);
+            } catch (error) {
+                console.error('Error loading leaderboard data:', error);
+            }
+        }
+
+        // Update the leaderboard with current counts
+        function updateLeaderboard(teamCounts) {
+            // Update the number displays
+            document.getElementById('teamGayleCount').textContent = teamCounts["Gayle"];
+            document.getElementById('teamFaberCount').textContent = teamCounts["Faber"];
+            document.getElementById('teamSkibbieCount').textContent = teamCounts["Skibbie"];
+            document.getElementById('teamMcintoshCount').textContent = teamCounts["Mcintosh"];
+            
+            // Update the bar chart
+            updateBarChart(teamCounts);
+        }
+
+        // Update the bar chart visualization
+        function updateBarChart(teamCounts) {
+            // Get values
+            const gayleCount = teamCounts["Gayle"];
+            const faberCount = teamCounts["Faber"];
+            const skibbieCount = teamCounts["Skibbie"];
+            const mcintoshCount = teamCounts["Mcintosh"];
+            
+            // Find the maximum value for scaling
+            const maxCount = Math.max(
+                gayleCount, 
+                faberCount, 
+                skibbieCount, 
+                mcintoshCount, 
+                1  // Minimum of 1 to avoid division by zero
+            );
+            
+            // Calculate percentages (with a minimum of 5% for visibility when not zero)
+            const gaylePercent = gayleCount === 0 ? 0 : Math.max(5, (gayleCount / maxCount) * 100);
+            const faberPercent = faberCount === 0 ? 0 : Math.max(5, (faberCount / maxCount) * 100);
+            const skibbiePercent = skibbieCount === 0 ? 0 : Math.max(5, (skibbieCount / maxCount) * 100);
+            const mcintoshPercent = mcintoshCount === 0 ? 0 : Math.max(5, (mcintoshCount / maxCount) * 100);
+            
+            // Update bar widths with animation
+            document.getElementById('barGayle').style.width = gaylePercent + '%';
+            document.getElementById('barFaber').style.width = faberPercent + '%';
+            document.getElementById('barSkibbie').style.width = skibbiePercent + '%';
+            document.getElementById('barMcintosh').style.width = mcintoshPercent + '%';
+            
+            // Update values
+            document.getElementById('barGayleValue').textContent = gayleCount;
+            document.getElementById('barFaberValue').textContent = faberCount;
+            document.getElementById('barSkibbieValue').textContent = skibbieCount;
+            document.getElementById('barMcintoshValue').textContent = mcintoshCount;
+        }
+
+        // File input handling
+        document.getElementById('photoInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file chosen';
+            document.getElementById('fileName').textContent = fileName;
+            
+            // Preview image
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('previewPlaceholder');
+            const file = e.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+        });
+
+        // Check user's daily submissions
+        async function checkDailySubmissions(name) {
+            if (!name) return 0;
+            
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            try {
+                const submissionsRef = db.collection('submissions');
+                const snapshot = await submissionsRef
+                    .where('name', '==', name)
+                    .where('date', '==', today)
+                    .get();
+                
+                return snapshot.size; // Number of submissions today
+            } catch (error) {
+                console.error('Error checking submissions:', error);
+                return 0;
+            }
+        }
+
+        // Form submission
+        document.getElementById('photoSubmissionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const team = document.getElementById('team').value;
+            const description = document.getElementById('description').value;
+            const photoFile = document.getElementById('photoInput').files[0];
+            
+            if (!name || !team || !photoFile) {
+                alert('Please fill out all required fields and select a photo.');
+                return;
+            }
+            
+            // Check for daily submission limit
+            const submissionCount = await checkDailySubmissions(name);
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            if (submissionCount >= 2) {
+                // Show error message
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'block';
+                
+                // Hide error message after 3 seconds
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+                
+                return; // Stop the submission
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = document.querySelector('.submit-btn');
+                const originalBtnText = submitBtn.textContent;
+                submitBtn.innerHTML = "Uploading... <span class='loading-spinner'></span>";
+                submitBtn.disabled = true;
+                
+                // 1. Upload photo to Firebase Storage
+                const storageRef = storage.ref(`photos/${Date.now()}_${photoFile.name}`);
+                const uploadTask = await storageRef.put(photoFile);
+                const downloadURL = await uploadTask.ref.getDownloadURL();
+                
+                // 2. Save submission to Firestore
+                const submissionRef = db.collection('submissions').doc();
+                await submissionRef.set({
+                    name: name,
+                    team: team,
+                    description: description,
+                    photoUrl: downloadURL,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    date: today,
+                    userId: currentUser ? currentUser.uid : null
+                });
+                
+                // 3. Update team count
+                const teamRef = db.collection('teams').doc(team);
+                await db.runTransaction(async (transaction) => {
+                    const teamDoc = await transaction.get(teamRef);
+                    const currentCount = teamDoc.exists ? (teamDoc.data().count || 0) : 0;
+                    transaction.set(teamRef, { count: currentCount + 1 }, { merge: true });
+                });
+                
+                // 4. Reset form and show success
+                document.getElementById('photoSubmissionForm').reset();
+                document.getElementById('fileName').textContent = 'No file chosen';
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('previewPlaceholder').style.display = 'block';
+                
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // 5. Refresh leaderboard
+                loadLeaderboardData();
+                
+                // Reset button
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error submitting:', error);
+                alert('Error submitting your photo. Please try again.');
+                
+                // Reset button state
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.textContent = "Submit Photo";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Initialize the page
+        window.addEventListener('load', function() {
+            populateNameDropdown();
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
