@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>March to Muscles - Submission Tracker</title>
+    <title>March to Muscles - Partner Tracker</title>
     <style>
         body {
             font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
@@ -80,6 +80,11 @@
             border-left: 4px solid #8fb339;
         }
         
+        .partner-info {
+            background-color: #E3F2FD;
+            border-left: 4px solid #2196F3;
+        }
+        
         .money-value {
             font-size: 2rem;
             font-weight: bold;
@@ -101,6 +106,16 @@
             border-bottom: none;
         }
         
+        .stat-box.full-width {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .stat-box.full-width .stat-value {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
         .stat-label {
             font-weight: 600;
             color: #007f2f;
@@ -109,6 +124,11 @@
         .stat-value {
             font-size: 1.2rem;
             font-weight: bold;
+        }
+        
+        .partner-label {
+            font-weight: 600;
+            color: #2196F3;
         }
         
         .progress-container {
@@ -133,6 +153,10 @@
         
         .money-fill {
             background: linear-gradient(to right, #8fb339, #d4e157);
+        }
+        
+        .partner-fill {
+            background: linear-gradient(to right, #2196F3, #64B5F6);
         }
         
         .submission-history {
@@ -190,6 +214,39 @@
             font-weight: bold;
         }
         
+        .button-row {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .button {
+            background-color: #007f2f;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .secondary-button {
+            background-color: #607D8B;
+        }
+        
+        .button:hover {
+            background-color: #005d20;
+        }
+        
+        .secondary-button:hover {
+            background-color: #455A64;
+        }
+        
         @media (max-width: 480px) {
             .container {
                 padding: 20px 15px;
@@ -202,6 +259,15 @@
             h1:before {
                 display: none;
             }
+            
+            .button-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -209,8 +275,8 @@
     <div class="page-container">
         <div class="container">
             <header>
-                <h1>Submission Tracker</h1>
-                <p>Check how many photos you've submitted</p>
+                <h1>Partner Donation Tracker</h1>
+                <p>Track your submissions and partner donations</p>
             </header>
             
             <div>
@@ -226,9 +292,21 @@
             </div>
             
             <div id="stats" style="display: none;">
+                <div class="stats-container partner-info">
+                    <h3 style="margin-top: 0;">Partner Information</h3>
+                    <div class="stat-box full-width">
+                        <span class="partner-label">Your submissions benefit:</span>
+                        <span id="partnerDonor" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-box full-width">
+                        <span class="partner-label">You are donating for:</span>
+                        <span id="partnerRecipient" class="stat-value">-</span>
+                    </div>
+                </div>
+                
                 <div class="stats-container money-raised">
                     <div class="stat-box">
-                        <span class="stat-label">Money Raised:</span>
+                        <span class="stat-label">You've raised:</span>
                         <span id="moneyRaised" class="stat-value">$0.00</span>
                     </div>
                     <div class="money-value">$<span id="moneyValue">0.00</span></div>
@@ -236,6 +314,20 @@
                         <small>Goal: $30.00 ($0.50 per submission)</small>
                         <div class="progress-bar">
                             <div id="moneyProgress" class="progress-fill money-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-container money-raised" style="background-color: #FFEBEE; border-left-color: #E57373;">
+                    <div class="stat-box">
+                        <span class="stat-label">You'll donate:</span>
+                        <span id="moneyToDonate" class="stat-value">$0.00</span>
+                    </div>
+                    <div class="money-value" style="color: #D32F2F;">$<span id="donationValue">0.00</span></div>
+                    <div class="progress-container">
+                        <small>Based on your partner's submissions ($0.50 each)</small>
+                        <div class="progress-bar">
+                            <div id="donationProgress" class="progress-fill" style="background: linear-gradient(to right, #E57373, #EF9A9A);" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -270,6 +362,11 @@
                         <!-- Submission history will be shown here -->
                     </div>
                 </div>
+                
+                <div class="button-row">
+                    <a href="index.html" class="button">Submit Photo</a>
+                    <a href="#" id="viewPartnerBtn" class="button secondary-button">View Partner's Stats</a>
+                </div>
             </div>
             
             <div id="loadingIndicator" class="loading" style="display: none;">
@@ -279,9 +376,8 @@
             <div id="noSubmissions" style="display: none; text-align: center; margin: 30px 0;">
                 <p>You haven't made any submissions yet!</p>
                 <p>Go to the submission form to upload your photos.</p>
+                <a href="index.html" class="button" style="margin-top: 20px;">Submit Photo</a>
             </div>
-            
-            <a href="index.html" class="home-link">← Back to Submission Form</a>
         </div>
     </div>
 
@@ -404,6 +500,105 @@
             {name: "VB Trost", team: ""}
         ];
         
+        // Random partner pairings - fully randomized
+        const partnerPairings = {
+            "Abrianna Reaves": "Ian Kirsch",
+            "Ahmed Elmahdi": "Tyler Faber",
+            "Aidan Campbell": "Nandini Wagle",
+            "Aidan Walsh": "Rishi Patel",
+            "Aidan Welch": "Seth Gould",
+            "Alessia Pesce": "Tanner Torrey",
+            "Alex Alleyne": "Ava Wickberg",
+            "Alex Mancuso": "Tim Woodley",
+            "Allie Flynn": "Kharis Greear",
+            "Amanda Collins": "Taryn Chase",
+            "Anish Ghana": "Gavin Farbman",
+            "Antonio Kirylo": "Emma Fitzsimmons",
+            "Arav Patel": "Nick Fontanella",
+            "Ashley Reynolds": "Cam Overton",
+            "Austin McIntosh": "Quintan Boyle",
+            "Ava Mollaghan": "Brian Cohn",
+            "Ava Wickberg": "Alex Alleyne",
+            "Becca Moore": "Geoffrey Tocco",
+            "Benjamin Sheehan": "Caroline Harris",
+            "Bobby Bammann": "Emme Muller",
+            "Brian Cohn": "Ava Mollaghan",
+            "Brooke Thurman": "Evan Hayden",
+            "Bry Hogan": "David Gerth",
+            "Caitlin Croci": "Julia Perri",
+            "Caleb Dozier": "Owings Holler",
+            "Cam Overton": "Ashley Reynolds",
+            "Carli Bowen": "Jack Purcaro",
+            "Caroline Harris": "Benjamin Sheehan",
+            "Chaz Faletti": "Tommy Marvin",
+            "Connor Autera": "Stergos Trintis",
+            "Connor Lowery": "Ryan Trahan",
+            "Cooper Johnston": "Isabella Silvis",
+            "Dalton Kahl": "LiLi Gayle",
+            "David Gerth": "Bry Hogan",
+            "Delilah Mills": "Luke Ribar",
+            "Dylan Cobb": "Grantland Rogers",
+            "Eli Chang": "Quinn Lovette",
+            "Emily Carr": "Ryan St.Clair",
+            "Emma Blanton": "Sophia Hemsey",
+            "Emma Fitzsimmons": "Antonio Kirylo",
+            "Emme Muller": "Bobby Bammann",
+            "Emmet Johnson": "Rylee Cauthren",
+            "Erin McCauley": "Rahi Gajjar",
+            "Esri Lowe": "Hanna Fay",
+            "Evan Hayden": "Brooke Thurman",
+            "Gabe Guisti": "Grace Johnson",
+            "Gavin Farbman": "Anish Ghana",
+            "Geoffrey Tocco": "Becca Moore",
+            "Grace Johnson": "Gabe Guisti",
+            "Grace Skibbie": "Morgan Ellison",
+            "Grantland Rogers": "Dylan Cobb",
+            "Hailey Hicks": "Rafael Freitas",
+            "Hanna Fay": "Esri Lowe",
+            "Hunter Kahle": "Katie McMahon",
+            "Ian Kirsch": "Abrianna Reaves",
+            "Isabella Silvis": "Cooper Johnston",
+            "Jack Purcaro": "Carli Bowen",
+            "Jackson Fanelli": "Mason Adams",
+            "Jacob Lotter": "Olivia Myers",
+            "JP Patella": "Lucas Bruns",
+            "Julia Perri": "Caitlin Croci",
+            "Katie McMahon": "Hunter Kahle",
+            "Kharis Greear": "Allie Flynn",
+            "Lauren Sebestyen": "Ryan Ayers",
+            "LiLi Gayle": "Dalton Kahl",
+            "Lucas Bruns": "JP Patella",
+            "Luke Ribar": "Delilah Mills",
+            "Mason Adams": "Jackson Fanelli",
+            "Morgan Ellison": "Grace Skibbie",
+            "Nandini Wagle": "Aidan Campbell",
+            "Natalia Berti": "Thelma Zaw",
+            "Nick Fontanella": "Arav Patel",
+            "Nick Magnotta": "Tate Sweatt",
+            "Olivia Myers": "Jacob Lotter",
+            "Owings Holler": "Caleb Dozier",
+            "Quinn Lovette": "Eli Chang",
+            "Quintan Boyle": "Austin McIntosh",
+            "Rafael Freitas": "Hailey Hicks",
+            "Rahi Gajjar": "Erin McCauley",
+            "Rishi Patel": "Aidan Walsh",
+            "Ryan Ayers": "Lauren Sebestyen",
+            "Ryan St.Clair": "Emily Carr",
+            "Ryan Trahan": "Connor Lowery",
+            "Rylee Cauthren": "Emmet Johnson",
+            "Seth Gould": "Aidan Welch",
+            "Sophia Hemsey": "Emma Blanton",
+            "Stergos Trintis": "Connor Autera",
+            "Tanner Torrey": "Alessia Pesce",
+            "Taryn Chase": "Amanda Collins",
+            "Tate Sweatt": "Nick Magnotta",
+            "Thelma Zaw": "Natalia Berti",
+            "Tim Woodley": "Alex Mancuso",
+            "Tommy Marvin": "Chaz Faletti",
+            "Tyler Faber": "Ahmed Elmahdi",
+            "VB Trost": "VB Trost" // Odd number, so they partner with themselves
+        };
+        
         // DOM elements
         var nameSelect = document.getElementById('nameSelect');
         var statsDiv = document.getElementById('stats');
@@ -418,10 +613,20 @@
         var moneyRaised = document.getElementById('moneyRaised');
         var moneyValue = document.getElementById('moneyValue');
         var moneyProgress = document.getElementById('moneyProgress');
+        var moneyToDonate = document.getElementById('moneyToDonate');
+        var donationValue = document.getElementById('donationValue');
+        var donationProgress = document.getElementById('donationProgress');
+        var partnerDonor = document.getElementById('partnerDonor');
+        var partnerRecipient = document.getElementById('partnerRecipient');
+        var viewPartnerBtn = document.getElementById('viewPartnerBtn');
         
         // Constants
         const MONEY_PER_SUBMISSION = 0.50;
-        const MAX_MONEY_GOAL = 30; // Updated money goal to $30
+        const MAX_MONEY_GOAL = 30;
+        
+        // Current selected person and their partner
+        var currentPerson = '';
+        var currentPartner = '';
         
         // Populate name dropdown
         function populateNameDropdown() {
@@ -457,61 +662,99 @@
         function loadUserSubmissions(userName) {
             if (!userName) return;
             
+            currentPerson = userName;
+            currentPartner = partnerPairings[userName] || "No partner assigned";
+            
             // Show loading
             statsDiv.style.display = 'none';
             noSubmissions.style.display = 'none';
             indexNotice.style.display = 'none';
             loadingIndicator.style.display = 'block';
             
+            // Update partner information
+            partnerDonor.textContent = currentPartner;
+            partnerRecipient.textContent = currentPartner;
+            
+            // Update View Partner button
+            viewPartnerBtn.setAttribute('data-partner', currentPartner);
+            viewPartnerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const partnerName = this.getAttribute('data-partner');
+                if (partnerName && partnerName !== "No partner assigned") {
+                    nameSelect.value = partnerName;
+                    loadUserSubmissions(partnerName);
+                }
+            });
+            
             // Get today's date in YYYY-MM-DD format
             var today = new Date().toISOString().split('T')[0];
             
-            // First check if user has any submissions (simpler query that doesn't need an index)
-            db.collection('submissions')
+            // Promise for loading the current person's submissions
+            const userPromise = db.collection('submissions')
                 .where('name', '==', userName)
                 .limit(1)
                 .get()
                 .then(snapshot => {
-                    // If no submissions, show the no submissions message
-                    if (snapshot.empty) {
-                        loadingIndicator.style.display = 'none';
-                        noSubmissions.style.display = 'block';
-                        return;
+                    // If there are submissions, get the full ordered list
+                    if (!snapshot.empty) {
+                        return db.collection('submissions')
+                            .where('name', '==', userName)
+                            .orderBy('timestamp', 'desc')
+                            .get();
                     }
-                    
-                    // If there are submissions, perform the full query
-                    // This query requires the composite index, but we know it will return results
-                    return db.collection('submissions')
-                        .where('name', '==', userName)
-                        .orderBy('timestamp', 'desc')
-                        .get();
-                })
+                    return { empty: true, docs: [] };
+                });
+            
+            // Promise for loading the partner's submissions
+            const partnerPromise = db.collection('submissions')
+                .where('name', '==', currentPartner)
+                .limit(1)
+                .get()
                 .then(snapshot => {
-                    // If we don't have a snapshot (because the user has no submissions), return
-                    if (!snapshot) return;
-                    
+                    // If there are submissions, count them
+                    if (!snapshot.empty) {
+                        return db.collection('submissions')
+                            .where('name', '==', currentPartner)
+                            .get();
+                    }
+                    return { empty: true, docs: [] };
+                });
+            
+            // Execute both promises
+            Promise.all([userPromise, partnerPromise])
+                .then(([userSnapshot, partnerSnapshot]) => {
+                    // Handle user data
                     var submissions = [];
                     var todaySubmissions = 0;
                     var latestTeam = '';
                     
-                    // Process submissions
-                    snapshot.forEach(doc => {
-                        var data = doc.data();
-                        submissions.push(data);
-                        
-                        // Count today's submissions
-                        if (data.date === today) {
-                            todaySubmissions++;
-                        }
-                        
-                        // Get the team
-                        if (!latestTeam && data.team) {
-                            latestTeam = data.team;
-                        }
-                    });
+                    if (!userSnapshot.empty) {
+                        userSnapshot.forEach(doc => {
+                            var data = doc.data();
+                            submissions.push(data);
+                            
+                            // Count today's submissions
+                            if (data.date === today) {
+                                todaySubmissions++;
+                            }
+                            
+                            // Get the team
+                            if (!latestTeam && data.team) {
+                                latestTeam = data.team;
+                            }
+                        });
+                    }
                     
-                    // Calculate money raised
+                    // Handle partner data
+                    var partnerSubmissions = 0;
+                    
+                    if (!partnerSnapshot.empty) {
+                        partnerSubmissions = partnerSnapshot.docs.length;
+                    }
+                    
+                    // Calculate money values
                     var totalMoney = submissions.length * MONEY_PER_SUBMISSION;
+                    var donationAmount = partnerSubmissions * MONEY_PER_SUBMISSION;
                     
                     // Update stats
                     todayCount.textContent = todaySubmissions;
@@ -519,6 +762,8 @@
                     teamName.textContent = latestTeam || 'Not assigned';
                     moneyRaised.textContent = '$' + formatMoney(totalMoney);
                     moneyValue.textContent = formatMoney(totalMoney);
+                    moneyToDonate.textContent = '$' + formatMoney(donationAmount);
+                    donationValue.textContent = formatMoney(donationAmount);
                     
                     // Update progress bars
                     var dailyProgressPercent = Math.min(todaySubmissions / 2 * 100, 100);
@@ -527,12 +772,15 @@
                     var moneyProgressPercent = Math.min(totalMoney / MAX_MONEY_GOAL * 100, 100);
                     moneyProgress.style.width = moneyProgressPercent + '%';
                     
+                    var donationProgressPercent = Math.min(donationAmount / MAX_MONEY_GOAL * 100, 100);
+                    donationProgress.style.width = donationProgressPercent + '%';
+                    
                     // Clear history list
                     historyList.innerHTML = '';
                     
                     // Show recent submissions (up to 10)
-                    var recentSubmissions = submissions.slice(0, 10);
-                    if (recentSubmissions.length > 0) {
+                    if (submissions.length > 0) {
+                        var recentSubmissions = submissions.slice(0, 10);
                         recentSubmissions.forEach(submission => {
                             var historyItem = document.createElement('div');
                             historyItem.className = 'history-item';
@@ -548,6 +796,7 @@
                         });
                     } else {
                         historyList.innerHTML = '<p>No submission history available</p>';
+                        noSubmissions.style.display = 'block';
                     }
                     
                     // Show stats
