@@ -75,6 +75,20 @@
             border-left: 4px solid #007f2f;
         }
         
+        .money-raised {
+            background-color: #f1f9d8;
+            border-left: 4px solid #8fb339;
+        }
+        
+        .money-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #617c27;
+            display: block;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
         .stat-box {
             display: flex;
             justify-content: space-between;
@@ -115,6 +129,10 @@
             border-radius: 5px;
             width: 0%;
             transition: width 0.5s ease-in-out;
+        }
+        
+        .money-fill {
+            background: linear-gradient(to right, #8fb339, #d4e157);
         }
         
         .submission-history {
@@ -158,6 +176,20 @@
             font-style: italic;
         }
         
+        .index-notice {
+            background-color: #fff9e6;
+            border: 1px solid #ffe0b2;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .index-notice a {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
         @media (max-width: 480px) {
             .container {
                 padding: 20px 15px;
@@ -189,7 +221,25 @@
                 </select>
             </div>
             
+            <div id="indexNotice" class="index-notice">
+                <p><strong>Admin Notice:</strong> The database needs an index to be created. Please <a href="https://console.firebase.google.com/v1/r/project/march-to-muscles/firestore/indexes?create_composite=ClRwcm9qZWN0cy9tYXJjaC10by1tdXNjbGVzL2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9zdWJtaXNzaW9ucy9pbmRleGVzL18QARoICgRuYW1lEAEaDQoJdGltZXN0YW1wEAIaDAoIX19uYW1lX18QAg" target="_blank">click here</a> to create the index (one-time setup).</p>
+            </div>
+            
             <div id="stats" style="display: none;">
+                <div class="stats-container money-raised">
+                    <div class="stat-box">
+                        <span class="stat-label">Money Raised:</span>
+                        <span id="moneyRaised" class="stat-value">$0.00</span>
+                    </div>
+                    <div class="money-value">$<span id="moneyValue">0.00</span></div>
+                    <div class="progress-container">
+                        <small>Goal: $30.00 ($0.50 per submission)</small>
+                        <div class="progress-bar">
+                            <div id="moneyProgress" class="progress-fill money-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="stats-container">
                     <div class="stat-box">
                         <span class="stat-label">Today's Submissions:</span>
@@ -364,6 +414,14 @@
         var teamName = document.getElementById('teamName');
         var todayProgress = document.getElementById('todayProgress');
         var historyList = document.getElementById('historyList');
+        var indexNotice = document.getElementById('indexNotice');
+        var moneyRaised = document.getElementById('moneyRaised');
+        var moneyValue = document.getElementById('moneyValue');
+        var moneyProgress = document.getElementById('moneyProgress');
+        
+        // Constants
+        const MONEY_PER_SUBMISSION = 0.50;
+        const MAX_MONEY_GOAL = 30; // Updated money goal to $30
         
         // Populate name dropdown
         function populateNameDropdown() {
@@ -390,6 +448,11 @@
             });
         }
         
+        // Format money
+        function formatMoney(amount) {
+            return amount.toFixed(2);
+        }
+        
         // Load user submissions
         function loadUserSubmissions(userName) {
             if (!userName) return;
@@ -397,23 +460,35 @@
             // Show loading
             statsDiv.style.display = 'none';
             noSubmissions.style.display = 'none';
+            indexNotice.style.display = 'none';
             loadingIndicator.style.display = 'block';
             
             // Get today's date in YYYY-MM-DD format
             var today = new Date().toISOString().split('T')[0];
             
-            // Query Firestore
+            // First check if user has any submissions (simpler query that doesn't need an index)
             db.collection('submissions')
                 .where('name', '==', userName)
-                .orderBy('timestamp', 'desc')
+                .limit(1)
                 .get()
                 .then(snapshot => {
-                    // Check if there are any submissions
+                    // If no submissions, show the no submissions message
                     if (snapshot.empty) {
                         loadingIndicator.style.display = 'none';
                         noSubmissions.style.display = 'block';
                         return;
                     }
+                    
+                    // If there are submissions, perform the full query
+                    // This query requires the composite index, but we know it will return results
+                    return db.collection('submissions')
+                        .where('name', '==', userName)
+                        .orderBy('timestamp', 'desc')
+                        .get();
+                })
+                .then(snapshot => {
+                    // If we don't have a snapshot (because the user has no submissions), return
+                    if (!snapshot) return;
                     
                     var submissions = [];
                     var todaySubmissions = 0;
@@ -435,14 +510,22 @@
                         }
                     });
                     
+                    // Calculate money raised
+                    var totalMoney = submissions.length * MONEY_PER_SUBMISSION;
+                    
                     // Update stats
                     todayCount.textContent = todaySubmissions;
                     totalCount.textContent = submissions.length;
                     teamName.textContent = latestTeam || 'Not assigned';
+                    moneyRaised.textContent = '$' + formatMoney(totalMoney);
+                    moneyValue.textContent = formatMoney(totalMoney);
                     
-                    // Update progress bar
-                    var progressPercent = Math.min(todaySubmissions / 2 * 100, 100);
-                    todayProgress.style.width = progressPercent + '%';
+                    // Update progress bars
+                    var dailyProgressPercent = Math.min(todaySubmissions / 2 * 100, 100);
+                    todayProgress.style.width = dailyProgressPercent + '%';
+                    
+                    var moneyProgressPercent = Math.min(totalMoney / MAX_MONEY_GOAL * 100, 100);
+                    moneyProgress.style.width = moneyProgressPercent + '%';
                     
                     // Clear history list
                     historyList.innerHTML = '';
@@ -474,9 +557,18 @@
                 .catch(error => {
                     console.error("Error getting submissions: ", error);
                     loadingIndicator.style.display = 'none';
-                    statsDiv.style.display = 'none';
-                    noSubmissions.style.display = 'block';
-                    noSubmissions.innerHTML = `<p>Error loading submissions: ${error.message}</p>`;
+                    
+                    // Check if it's an index error
+                    if (error.message && error.message.includes('index')) {
+                        // Show the index notice for admins
+                        indexNotice.style.display = 'block';
+                        noSubmissions.style.display = 'block';
+                        noSubmissions.innerHTML = '<p>The admin needs to create a database index for this feature to work correctly. Please try again later.</p>';
+                    } else {
+                        // Show generic error
+                        noSubmissions.style.display = 'block';
+                        noSubmissions.innerHTML = `<p>Error loading submissions. Please try again later.</p>`;
+                    }
                 });
         }
         
@@ -488,6 +580,7 @@
             } else {
                 statsDiv.style.display = 'none';
                 noSubmissions.style.display = 'none';
+                indexNotice.style.display = 'none';
             }
         });
         
