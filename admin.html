@@ -75,18 +75,6 @@
             border: none;
             cursor: pointer;
         }
-        .filter-controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .filter-controls select, .filter-controls input {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            flex-grow: 1;
-        }
         .loading {
             text-align: center;
             margin: 30px 0;
@@ -109,25 +97,9 @@
         
         <div id="submissionsSection" class="submissions">
             <h2>Manage Submissions</h2>
-            
-            <div class="filter-controls">
-                <select id="teamFilter">
-                    <option value="">All Teams</option>
-                    <option value="Gayle">Gayle</option>
-                    <option value="Faber">Faber</option>
-                    <option value="Skibbie">Skibbie</option>
-                    <option value="Mcintosh">Mcintosh</option>
-                </select>
-                <input type="text" id="nameFilter" placeholder="Filter by name">
-                <input type="date" id="dateFilter">
-                <button id="applyFilterBtn">Apply Filters</button>
-                <button id="clearFilterBtn">Clear Filters</button>
-            </div>
-            
             <div id="loadingIndicator" class="loading">
                 Loading submissions...
             </div>
-            
             <div id="submissionGrid" class="submission-grid">
                 <!-- Submissions will be loaded here -->
             </div>
@@ -140,220 +112,129 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script>
-        // IMPORTANT: Enter your admin password here - this will be used to log in
-        const ADMIN_PASSWORD = "password123";
+        // Simple admin password
+        var adminPassword = "password123";
         
-        // Your Firebase configuration (use the same one as in your index.html)
-       const firebaseConfig = {
-  apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
-  authDomain: "march-to-muscles.firebaseapp.com",
-  projectId: "march-to-muscles",
-  storageBucket: "march-to-muscles.firebasestorage.app",
-  messagingSenderId: "591055422160",
-  appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
-  measurementId: "G-1Q4BDVWFX8"
-};
-
+        // Firebase configuration - REPLACE WITH YOUR ACTUAL CONFIG
+        var firebaseConfig = {
+            apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
+            authDomain: "march-to-muscles.firebaseapp.com",
+            projectId: "march-to-muscles",
+            storageBucket: "march-to-muscles.firebasestorage.app",
+            messagingSenderId: "591055422160",
+            appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
+            measurementId: "G-1Q4BDVWFX8"
+        };
+        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-
-        // Helper function to format dates
-        function formatDate(date) {
-            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-        }
-
-        // Delete a submission and its associated photo
-        async function deleteSubmission(submissionId, photoUrl, team) {
-            if (!confirm("Are you sure you want to delete this submission? This cannot be undone.")) {
-                return;
-            }
-            
-            try {
-                console.log(`Deleting submission: ${submissionId}`);
-                
-                // 1. Delete the document from Firestore
-                await db.collection('submissions').doc(submissionId).delete();
-                console.log("Submission document deleted");
-                
-                // 2. Delete the photo from Storage if URL exists
-                if (photoUrl) {
-                    try {
-                        // Extract the path from the URL
-                        const storagePath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
-                        await storage.ref(storagePath).delete();
-                        console.log("Photo deleted from storage");
-                    } catch (storageError) {
-                        console.error("Error deleting photo (continuing anyway):", storageError);
-                    }
-                }
-                
-                // 3. Update team count
-                if (team) {
-                    try {
-                        const teamRef = db.collection('teams').doc(team);
-                        await db.runTransaction(async (transaction) => {
-                            const teamDoc = await transaction.get(teamRef);
-                            if (teamDoc.exists) {
-                                const currentCount = teamDoc.data().count || 0;
-                                if (currentCount > 0) {
-                                    transaction.update(teamRef, { count: currentCount - 1 });
-                                }
-                            }
-                        });
-                        console.log(`Team ${team} count updated`);
-                    } catch (teamError) {
-                        console.error("Error updating team count (continuing anyway):", teamError);
-                    }
-                }
-                
-                // 4. Notify user and refresh the list
-                alert("Submission deleted successfully!");
+        var db = firebase.firestore();
+        var storage = firebase.storage();
+        
+        // DOM elements
+        var loginSection = document.getElementById('loginSection');
+        var submissionsSection = document.getElementById('submissionsSection');
+        var passwordInput = document.getElementById('passwordInput');
+        var loginBtn = document.getElementById('loginBtn');
+        var loginError = document.getElementById('loginError');
+        var submissionGrid = document.getElementById('submissionGrid');
+        var loadingIndicator = document.getElementById('loadingIndicator');
+        
+        // Login button event
+        loginBtn.addEventListener('click', function() {
+            if (passwordInput.value === adminPassword) {
+                loginSection.style.display = 'none';
+                submissionsSection.style.display = 'block';
                 loadSubmissions();
-                
-            } catch (error) {
-                console.error("Error deleting submission:", error);
-                alert(`Error deleting submission: ${error.message}`);
+            } else {
+                loginError.style.display = 'block';
             }
-        }
-
-        // Load submissions with optional filters
-        async function loadSubmissions() {
-            console.log("Loading submissions with filters");
+        });
+        
+        // Load submissions
+        function loadSubmissions() {
             submissionGrid.innerHTML = '';
             loadingIndicator.style.display = 'block';
             
-            try {
-                let query = db.collection('submissions');
-                
-                // Apply filters if they exist
-                if (teamFilter.value) {
-                    console.log("Filtering by team:", teamFilter.value);
-                    query = query.where('team', '==', teamFilter.value);
-                }
-                
-                if (dateFilter.value) {
-                    console.log("Filtering by date:", dateFilter.value);
-                    query = query.where('date', '==', dateFilter.value);
-                }
-                
-                // Get submissions and order by timestamp
-                console.log("Executing Firestore query");
-                const snapshot = await query.orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    console.log("No submissions found");
-                    submissionGrid.innerHTML = '<p>No submissions found matching the filters.</p>';
+            db.collection('submissions').orderBy('timestamp', 'desc').get()
+                .then(function(snapshot) {
+                    if (snapshot.empty) {
+                        submissionGrid.innerHTML = '<p>No submissions found.</p>';
+                    } else {
+                        snapshot.forEach(function(doc) {
+                            var data = doc.data();
+                            
+                            var card = document.createElement('div');
+                            card.className = 'submission-card';
+                            card.innerHTML = `
+                                <img src="${data.photoUrl}" alt="Submission" class="submission-image">
+                                <div class="submission-details">
+                                    <strong>Name:</strong> ${data.name}<br>
+                                    <strong>Team:</strong> ${data.team}<br>
+                                    <strong>Date:</strong> ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'Unknown'}<br>
+                                    <button class="delete-btn" data-id="${doc.id}" data-photo="${data.photoUrl}" data-team="${data.team}">Delete</button>
+                                </div>
+                            `;
+                            
+                            var deleteBtn = card.querySelector('.delete-btn');
+                            deleteBtn.addEventListener('click', function() {
+                                var id = this.getAttribute('data-id');
+                                var photoUrl = this.getAttribute('data-photo');
+                                var team = this.getAttribute('data-team');
+                                
+                                if (confirm('Are you sure you want to delete this submission?')) {
+                                    deleteSubmission(id, photoUrl, team);
+                                }
+                            });
+                            
+                            submissionGrid.appendChild(card);
+                        });
+                    }
                     loadingIndicator.style.display = 'none';
-                    return;
-                }
-                
-                console.log(`Found ${snapshot.size} submissions`);
-                
-                // Process and display the submissions
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    
-                    // Apply name filter (client-side filtering since Firestore can't do partial text match)
-                    if (nameFilter.value && !data.name.toLowerCase().includes(nameFilter.value.toLowerCase())) {
-                        return;
+                })
+                .catch(function(error) {
+                    submissionGrid.innerHTML = `<p>Error loading submissions: ${error.message}</p>`;
+                    loadingIndicator.style.display = 'none';
+                });
+        }
+        
+        // Delete submission
+        function deleteSubmission(id, photoUrl, team) {
+            // Delete document
+            db.collection('submissions').doc(id).delete()
+                .then(function() {
+                    // Try to delete the photo
+                    if (photoUrl) {
+                        try {
+                            var photoPath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
+                            storage.ref(photoPath).delete();
+                        } catch (e) {
+                            console.error("Error deleting photo:", e);
+                        }
                     }
                     
-                    // Create submission card
-                    const card = document.createElement('div');
-                    card.className = 'submission-card';
-                    card.innerHTML = `
-                        <img src="${data.photoUrl}" alt="Submission photo" class="submission-image">
-                        <div class="submission-details">
-                            <strong>Name:</strong> ${data.name}<br>
-                            <strong>Team:</strong> ${data.team}<br>
-                            <strong>Date:</strong> ${formatDate(data.timestamp?.toDate() || new Date())}<br>
-                            <strong>Description:</strong> ${data.description || 'N/A'}<br>
-                            <button class="delete-btn" data-id="${doc.id}" data-photo="${data.photoUrl}" data-team="${data.team}">Delete Submission</button>
-                        </div>
-                    `;
+                    // Update team count
+                    if (team) {
+                        var teamRef = db.collection('teams').doc(team);
+                        db.runTransaction(function(transaction) {
+                            return transaction.get(teamRef).then(function(teamDoc) {
+                                if (!teamDoc.exists) return;
+                                
+                                var count = teamDoc.data().count || 0;
+                                if (count > 0) {
+                                    transaction.update(teamRef, { count: count - 1 });
+                                }
+                            });
+                        });
+                    }
                     
-                    // Add event listener to delete button
-                    const deleteBtn = card.querySelector('.delete-btn');
-                    deleteBtn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        const photoUrl = this.getAttribute('data-photo');
-                        const team = this.getAttribute('data-team');
-                        deleteSubmission(id, photoUrl, team);
-                    });
-                    
-                    submissionGrid.appendChild(card);
+                    alert('Submission deleted!');
+                    loadSubmissions();
+                })
+                .catch(function(error) {
+                    alert('Error deleting submission: ' + error.message);
                 });
-                
-            } catch (error) {
-                console.error("Error loading submissions:", error);
-                submissionGrid.innerHTML = `<p>Error loading submissions: ${error.message}</p>`;
-            }
-            
-            loadingIndicator.style.display = 'none';
         }
-
-        // Handle login function
-        function handleLogin() {
-            console.log("Login button clicked");
-            const enteredPassword = passwordInput.value;
-            console.log("Password entered: " + (enteredPassword ? "Yes" : "No"));
-            
-            if (enteredPassword === ADMIN_PASSWORD) {
-                console.log("Password matches - showing admin panel");
-                loginSection.style.display = 'none';
-                submissionsSection.style.display = 'block';
-                loginError.style.display = 'none';
-                loadSubmissions();
-            } else {
-                console.log("Password does not match");
-                loginError.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        }
-
-        // Wait for DOM content to load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM fully loaded");
-            
-            // Get DOM elements
-            const loginSection = document.getElementById('loginSection');
-            const submissionsSection = document.getElementById('submissionsSection');
-            const passwordInput = document.getElementById('passwordInput');
-            const loginBtn = document.getElementById('loginBtn');
-            const loginError = document.getElementById('loginError');
-            const submissionGrid = document.getElementById('submissionGrid');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const teamFilter = document.getElementById('teamFilter');
-            const nameFilter = document.getElementById('nameFilter');
-            const dateFilter = document.getElementById('dateFilter');
-            const applyFilterBtn = document.getElementById('applyFilterBtn');
-            const clearFilterBtn = document.getElementById('clearFilterBtn');
-            
-            // Login button click
-            loginBtn.addEventListener('click', handleLogin);
-            console.log("Login button event listener attached");
-            
-            // Enter key for login
-            passwordInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-            
-            // Filter buttons
-            applyFilterBtn.addEventListener('click', loadSubmissions);
-            clearFilterBtn.addEventListener('click', function() {
-                teamFilter.value = '';
-                nameFilter.value = '';
-                dateFilter.value = '';
-                loadSubmissions();
-            });
-            
-            console.log("All event listeners attached");
-        });
     </script>
 </body>
 </html>
