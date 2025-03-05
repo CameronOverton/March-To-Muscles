@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>March to Muscles - Submission Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #e6f7ee;
+            color: #284034;
+        }
+        
+        .page-container {
+            min-height: 100vh;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #e6f7ee 0%, #d0e8d4 100%);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2387c89c' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #007f2f;
+            margin: 0;
+            font-size: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1:before {
+            content: '☘️';
+            position: absolute;
+            left: -1.5em;
+            top: 0;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dde1e5;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #f0f9f4;
+            margin-bottom: 20px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #007f2f;
+            box-shadow: 0 0 0 3px rgba(0, 127, 47, 0.2);
+        }
+        
+        .stats-container {
+            background-color: #f0f9f4;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #007f2f;
+        }
+        
+        .stat-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #d0e8d4;
+            padding: 10px 0;
+        }
+        
+        .stat-box:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-weight: 600;
+            color: #007f2f;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .progress-container {
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #007f2f, #4caf50);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .submission-history {
+            margin-top: 30px;
+        }
+        
+        .history-title {
+            color: #007f2f;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #d0e8d4;
+            padding-bottom: 8px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-item:nth-child(odd) {
+            background-color: #f9fcf9;
+        }
+        
+        .home-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007f2f;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .home-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.7rem;
+            }
+            
+            h1:before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+            <header>
+                <h1>Submission Tracker</h1>
+                <p>Check how many photos you've submitted</p>
+            </header>
+            
+            <div>
+                <label for="nameSelect">Select your name:</label>
+                <select id="nameSelect">
+                    <option value="">-- Choose your name --</option>
+                    <!-- Names will be populated here -->
+                </select>
+            </div>
+            
+            <div id="stats" style="display: none;">
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-label">Today's Submissions:</span>
+                        <span id="todayCount" class="stat-value">0</span>
+                    </div>
+                    <div class="progress-container">
+                        <small>Daily Limit: 2 submissions</small>
+                        <div class="progress-bar">
+                            <div id="todayProgress" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-label">Team:</span>
+                        <span id="teamName" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Total Submissions:</span>
+                        <span id="totalCount" class="stat-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="submission-history">
+                    <h3 class="history-title">Recent Submissions</h3>
+                    <div id="historyList">
+                        <!-- Submission history will be shown here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                Loading your submission data...
+            </div>
+            
+            <div id="noSubmissions" style="display: none; text-align: center; margin: 30px 0;">
+                <p>You haven't made any submissions yet!</p>
+                <p>Go to the submission form to upload your photos.</p>
+            </div>
+            
+            <a href="index.html" class="home-link">← Back to Submission Form</a>
+        </div>
+    </div>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
+            authDomain: "march-to-muscles.firebaseapp.com",
+            projectId: "march-to-muscles",
+            storageBucket: "march-to-muscles.firebasestorage.app",
+            messagingSenderId: "591055422160",
+            appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
+            measurementId: "G-1Q4BDVWFX8"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+        
+        // Member roster
+        const memberRoster = [
+            {name: "Abrianna Reaves", team: ""},
+            {name: "Ahmed Elmahdi", team: ""},
+            {name: "Aidan Campbell", team: ""},
+            {name: "Aidan Walsh", team: ""},
+            {name: "Aidan Welch", team: ""},
+            {name: "Alessia Pesce", team: ""},
+            {name: "Alex Alleyne", team: ""},
+            {name: "Alex Mancuso", team: ""},
+            {name: "Allie Flynn", team: ""},
+            {name: "Amanda Collins", team: ""},
+            {name: "Anish Ghana", team: ""},
+            {name: "Antonio Kirylo", team: ""},
+            {name: "Arav Patel", team: ""},
+            {name: "Ashley Reynolds", team: ""},
+            {name: "Austin McIntosh", team: ""},
+            {name: "Ava Mollaghan", team: ""},
+            {name: "Ava Wickberg", team: ""},
+            {name: "Becca Moore", team: ""},
+            {name: "Benjamin Sheehan", team: ""},
+            {name: "Bobby Bammann", team: ""},
+            {name: "Brian Cohn", team: ""},
+            {name: "Brooke Thurman", team: ""},
+            {name: "Bry Hogan", team: ""},
+            {name: "Caitlin Croci", team: ""},
+            {name: "Caleb Dozier", team: ""},
+            {name: "Cam Overton", team: ""},
+            {name: "Carli Bowen", team: ""},
+            {name: "Caroline Harris", team: ""},
+            {name: "Chaz Faletti", team: ""},
+            {name: "Connor Autera", team: ""},
+            {name: "Connor Lowery", team: ""},
+            {name: "Cooper Johnston", team: ""},
+            {name: "Dalton Kahl", team: ""},
+            {name: "David Gerth", team: ""},
+            {name: "Delilah Mills", team: ""},
+            {name: "Dylan Cobb", team: ""},
+            {name: "Eli Chang", team: ""},
+            {name: "Emily Carr", team: ""},
+            {name: "Emma Blanton", team: ""},
+            {name: "Emma Fitzsimmons", team: ""},
+            {name: "Emme Muller", team: ""},
+            {name: "Emmet Johnson", team: ""},
+            {name: "Erin McCauley", team: ""},
+            {name: "Esri Lowe", team: ""},
+            {name: "Evan Hayden", team: ""},
+            {name: "Gabe Guisti", team: ""},
+            {name: "Gavin Farbman", team: ""},
+            {name: "Geoffrey Tocco", team: ""},
+            {name: "Grace Johnson", team: ""},
+            {name: "Grace Skibbie", team: ""},
+            {name: "Grantland Rogers", team: ""},
+            {name: "Hailey Hicks", team: ""},
+            {name: "Hanna Fay", team: ""},
+            {name: "Hunter Kahle", team: ""},
+            {name: "Ian Kirsch", team: ""},
+            {name: "Isabella Silvis", team: ""},
+            {name: "Jack Purcaro", team: ""},
+            {name: "Jackson Fanelli", team: ""},
+            {name: "Jacob Lotter", team: ""},
+            {name: "JP Patella", team: ""},
+            {name: "Julia Perri", team: ""},
+            {name: "Katie McMahon", team: ""},
+            {name: "Kharis Greear", team: ""},
+            {name: "Lauren Sebestyen", team: ""},
+            {name: "LiLi Gayle", team: ""},
+            {name: "Lucas Bruns", team: ""},
+            {name: "Luke Ribar", team: ""},
+            {name: "Mason Adams", team: ""},
+            {name: "Morgan Ellison", team: ""},
+            {name: "Nandini Wagle", team: ""},
+            {name: "Natalia Berti", team: ""},
+            {name: "Nick Fontanella", team: ""},
+            {name: "Nick Magnotta", team: ""},
+            {name: "Olivia Myers", team: ""},
+            {name: "Owings Holler", team: ""},
+            {name: "Quinn Lovette", team: ""},
+            {name: "Quintan Boyle", team: ""},
+            {name: "Rafael Freitas", team: ""},
+            {name: "Rahi Gajjar", team: ""},
+            {name: "Rishi Patel", team: ""},
+            {name: "Ryan Ayers", team: ""},
+            {name: "Ryan St.Clair", team: ""},
+            {name: "Ryan Trahan", team: ""},
+            {name: "Rylee Cauthren", team: ""},
+            {name: "Seth Gould", team: ""},
+            {name: "Sophia Hemsey", team: ""},
+            {name: "Stergos Trintis", team: ""},
+            {name: "Tanner Torrey", team: ""},
+            {name: "Taryn Chase", team: ""},
+            {name: "Tate Sweatt", team: ""},
+            {name: "Thelma Zaw", team: ""},
+            {name: "Tim Woodley", team: ""},
+            {name: "Tommy Marvin", team: ""},
+            {name: "Tyler Faber", team: ""},
+            {name: "VB Trost", team: ""}
+        ];
+        
+        // DOM elements
+        var nameSelect = document.getElementById('nameSelect');
+        var statsDiv = document.getElementById('stats');
+        var loadingIndicator = document.getElementById('loadingIndicator');
+        var noSubmissions = document.getElementById('noSubmissions');
+        var todayCount = document.getElementById('todayCount');
+        var totalCount = document.getElementById('totalCount');
+        var teamName = document.getElementById('teamName');
+        var todayProgress = document.getElementById('todayProgress');
+        var historyList = document.getElementById('historyList');
+        
+        // Populate name dropdown
+        function populateNameDropdown() {
+            // Sort alphabetically
+            memberRoster.sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Add to dropdown
+            memberRoster.forEach(member => {
+                var option = document.createElement('option');
+                option.value = member.name;
+                option.textContent = member.name;
+                nameSelect.appendChild(option);
+            });
+        }
+        
+        // Format date for display
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Load user submissions
+        function loadUserSubmissions(userName) {
+            if (!userName) return;
+            
+            // Show loading
+            statsDiv.style.display = 'none';
+            noSubmissions.style.display = 'none';
+            loadingIndicator.style.display = 'block';
+            
+            // Get today's date in YYYY-MM-DD format
+            var today = new Date().toISOString().split('T')[0];
+            
+            // Query Firestore
+            db.collection('submissions')
+                .where('name', '==', userName)
+                .orderBy('timestamp', 'desc')
+                .get()
+                .then(snapshot => {
+                    // Check if there are any submissions
+                    if (snapshot.empty) {
+                        loadingIndicator.style.display = 'none';
+                        noSubmissions.style.display = 'block';
+                        return;
+                    }
+                    
+                    var submissions = [];
+                    var todaySubmissions = 0;
+                    var latestTeam = '';
+                    
+                    // Process submissions
+                    snapshot.forEach(doc => {
+                        var data = doc.data();
+                        submissions.push(data);
+                        
+                        // Count today's submissions
+                        if (data.date === today) {
+                            todaySubmissions++;
+                        }
+                        
+                        // Get the team
+                        if (!latestTeam && data.team) {
+                            latestTeam = data.team;
+                        }
+                    });
+                    
+                    // Update stats
+                    todayCount.textContent = todaySubmissions;
+                    totalCount.textContent = submissions.length;
+                    teamName.textContent = latestTeam || 'Not assigned';
+                    
+                    // Update progress bar
+                    var progressPercent = Math.min(todaySubmissions / 2 * 100, 100);
+                    todayProgress.style.width = progressPercent + '%';
+                    
+                    // Clear history list
+                    historyList.innerHTML = '';
+                    
+                    // Show recent submissions (up to 10)
+                    var recentSubmissions = submissions.slice(0, 10);
+                    if (recentSubmissions.length > 0) {
+                        recentSubmissions.forEach(submission => {
+                            var historyItem = document.createElement('div');
+                            historyItem.className = 'history-item';
+                            
+                            var timestamp = submission.timestamp?.toDate() || new Date(submission.date);
+                            
+                            historyItem.innerHTML = `
+                                <div>${submission.team} Team</div>
+                                <div>${formatDate(timestamp)}</div>
+                            `;
+                            
+                            historyList.appendChild(historyItem);
+                        });
+                    } else {
+                        historyList.innerHTML = '<p>No submission history available</p>';
+                    }
+                    
+                    // Show stats
+                    loadingIndicator.style.display = 'none';
+                    statsDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error("Error getting submissions: ", error);
+                    loadingIndicator.style.display = 'none';
+                    statsDiv.style.display = 'none';
+                    noSubmissions.style.display = 'block';
+                    noSubmissions.innerHTML = `<p>Error loading submissions: ${error.message}</p>`;
+                });
+        }
+        
+        // Handle name selection change
+        nameSelect.addEventListener('change', function() {
+            var selectedName = this.value;
+            if (selectedName) {
+                loadUserSubmissions(selectedName);
+            } else {
+                statsDiv.style.display = 'none';
+                noSubmissions.style.display = 'none';
+            }
+        });
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            populateNameDropdown();
+        });
+    </script>
+</body>
+</html>
