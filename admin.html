@@ -23,14 +23,7 @@
         h1 {
             text-align: center;
             color: #007f2f;
-        }
-        .login-form {
-            max-width: 400px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        .submissions {
-            display: none;
+            margin-bottom: 20px;
         }
         .submission-grid {
             display: grid;
@@ -62,24 +55,32 @@
             width: 100%;
             margin-top: 10px;
         }
-        input, button {
-            padding: 10px;
-            margin: 10px 0;
-            width: 100%;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        button {
-            background-color: #007f2f;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
         .loading {
             text-align: center;
             margin: 30px 0;
             font-style: italic;
             color: #666;
+        }
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-controls select, 
+        .filter-controls input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            flex-grow: 1;
+        }
+        .filter-controls button {
+            background-color: #007f2f;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -87,22 +88,25 @@
     <div class="container">
         <h1>March to Muscles - Admin Panel</h1>
         
-        <div id="loginSection" class="login-form">
-            <h2>Admin Login</h2>
-            <p>Enter the admin password to continue:</p>
-            <input type="password" id="passwordInput" placeholder="Enter admin password">
-            <button id="loginBtn">Login</button>
-            <p id="loginError" style="color: red; display: none;">Incorrect password. Please try again.</p>
+        <div class="filter-controls">
+            <select id="teamFilter">
+                <option value="">All Teams</option>
+                <option value="Gayle">Gayle</option>
+                <option value="Faber">Faber</option>
+                <option value="Skibbie">Skibbie</option>
+                <option value="Mcintosh">Mcintosh</option>
+            </select>
+            <input type="text" id="nameFilter" placeholder="Filter by name">
+            <button id="filterButton">Apply Filters</button>
+            <button id="clearButton">Clear Filters</button>
         </div>
         
-        <div id="submissionsSection" class="submissions">
-            <h2>Manage Submissions</h2>
-            <div id="loadingIndicator" class="loading">
-                Loading submissions...
-            </div>
-            <div id="submissionGrid" class="submission-grid">
-                <!-- Submissions will be loaded here -->
-            </div>
+        <div id="loadingIndicator" class="loading">
+            Loading submissions...
+        </div>
+        
+        <div id="submissionGrid" class="submission-grid">
+            <!-- Submissions will be loaded here -->
         </div>
     </div>
 
@@ -112,10 +116,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script>
-        // Simple admin password
-        var adminPassword = "MrPresident";
-        
-        // Firebase configuration - REPLACE WITH YOUR ACTUAL CONFIG
+        // Firebase configuration
         var firebaseConfig = {
             apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
             authDomain: "march-to-muscles.firebaseapp.com",
@@ -132,23 +133,19 @@
         var storage = firebase.storage();
         
         // DOM elements
-        var loginSection = document.getElementById('loginSection');
-        var submissionsSection = document.getElementById('submissionsSection');
-        var passwordInput = document.getElementById('passwordInput');
-        var loginBtn = document.getElementById('loginBtn');
-        var loginError = document.getElementById('loginError');
         var submissionGrid = document.getElementById('submissionGrid');
         var loadingIndicator = document.getElementById('loadingIndicator');
+        var teamFilter = document.getElementById('teamFilter');
+        var nameFilter = document.getElementById('nameFilter');
+        var filterButton = document.getElementById('filterButton');
+        var clearButton = document.getElementById('clearButton');
         
-        // Login button event
-        loginBtn.addEventListener('click', function() {
-            if (passwordInput.value === adminPassword) {
-                loginSection.style.display = 'none';
-                submissionsSection.style.display = 'block';
-                loadSubmissions();
-            } else {
-                loginError.style.display = 'block';
-            }
+        // Add event listeners
+        filterButton.addEventListener('click', loadSubmissions);
+        clearButton.addEventListener('click', function() {
+            teamFilter.value = '';
+            nameFilter.value = '';
+            loadSubmissions();
         });
         
         // Load submissions
@@ -156,13 +153,25 @@
             submissionGrid.innerHTML = '';
             loadingIndicator.style.display = 'block';
             
-            db.collection('submissions').orderBy('timestamp', 'desc').get()
+            var query = db.collection('submissions');
+            
+            // Apply team filter if selected
+            if (teamFilter.value) {
+                query = query.where('team', '==', teamFilter.value);
+            }
+            
+            query.orderBy('timestamp', 'desc').get()
                 .then(function(snapshot) {
                     if (snapshot.empty) {
                         submissionGrid.innerHTML = '<p>No submissions found.</p>';
                     } else {
                         snapshot.forEach(function(doc) {
                             var data = doc.data();
+                            
+                            // Apply name filter (client-side)
+                            if (nameFilter.value && !data.name.toLowerCase().includes(nameFilter.value.toLowerCase())) {
+                                return;
+                            }
                             
                             var card = document.createElement('div');
                             card.className = 'submission-card';
@@ -172,7 +181,8 @@
                                     <strong>Name:</strong> ${data.name}<br>
                                     <strong>Team:</strong> ${data.team}<br>
                                     <strong>Date:</strong> ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'Unknown'}<br>
-                                    <button class="delete-btn" data-id="${doc.id}" data-photo="${data.photoUrl}" data-team="${data.team}">Delete</button>
+                                    <strong>Description:</strong> ${data.description || 'None'}<br>
+                                    <button class="delete-btn" data-id="${doc.id}" data-photo="${data.photoUrl}" data-team="${data.team}">Delete Submission</button>
                                 </div>
                             `;
                             
@@ -228,13 +238,16 @@
                         });
                     }
                     
-                    alert('Submission deleted!');
+                    alert('Submission deleted successfully!');
                     loadSubmissions();
                 })
                 .catch(function(error) {
                     alert('Error deleting submission: ' + error.message);
                 });
         }
+        
+        // Load submissions when page loads
+        document.addEventListener('DOMContentLoaded', loadSubmissions);
     </script>
 </body>
 </html>
