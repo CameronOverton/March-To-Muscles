@@ -218,6 +218,7 @@
             margin-top: 30px;
             display: flex;
             justify-content: space-between;
+            gap: 15px;
         }
         
         .button {
@@ -233,6 +234,7 @@
             text-decoration: none;
             display: inline-block;
             transition: background-color 0.3s;
+            flex: 1;
         }
         
         .secondary-button {
@@ -296,11 +298,11 @@
                     <h3 style="margin-top: 0;">Partner Information</h3>
                     <div class="stat-box full-width">
                         <span class="partner-label">Your submissions benefit:</span>
-                        <span id="partnerDonor" class="stat-value">-</span>
+                        <span id="partnerBenefitsFrom" class="stat-value">-</span>
                     </div>
                     <div class="stat-box full-width">
                         <span class="partner-label">You are donating for:</span>
-                        <span id="partnerRecipient" class="stat-value">-</span>
+                        <span id="partnerDonatesFor" class="stat-value">-</span>
                     </div>
                 </div>
                 
@@ -365,7 +367,8 @@
                 
                 <div class="button-row">
                     <a href="index.html" class="button">Submit Photo</a>
-                    <a href="#" id="viewPartnerBtn" class="button secondary-button">View Partner's Stats</a>
+                    <a href="#" id="viewBenefitsBtn" class="button secondary-button">View Donor</a>
+                    <a href="#" id="viewDonatesBtn" class="button secondary-button">View Recipient</a>
                 </div>
             </div>
             
@@ -384,10 +387,11 @@
     <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script>
         // Firebase configuration
-        var firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
             authDomain: "march-to-muscles.firebaseapp.com",
             projectId: "march-to-muscles",
@@ -399,7 +403,7 @@
         
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        var db = firebase.firestore();
+        const db = firebase.firestore();
         
         // Member roster
         const memberRoster = [
@@ -500,133 +504,277 @@
             {name: "VB Trost", team: ""}
         ];
         
-        // Random partner pairings - fully randomized
+        // Complete team assignments for all four teams
+        const teamAssignments = {
+            // Team Faber
+            "Tyler Faber": "Faber",
+            "Abrianna Reaves": "Faber",
+            "Aidan Campbell": "Faber",
+            "Alex Mancuso": "Faber",
+            "Amanda Collins": "Faber",
+            "Dalton Kahl": "Faber",
+            "Brooke Thurman": "Faber",
+            "Connor Autera": "Faber",
+            "Benjamin Sheehan": "Faber",
+            "Emma Blanton": "Faber",
+            "Evan Hayden": "Faber",
+            "Geoffrey Tocco": "Faber",
+            "Jacob Lotter": "Faber",
+            "Morgan Ellison": "Faber",
+            "Kharis Greear": "Faber",
+            "Ryan St.Clair": "Faber",
+            "Stergos Trintis": "Faber",
+            "Tanner Torrey": "Faber",
+            "Katie McMahon": "Faber",
+            "Mason Adams": "Faber",
+            "Allie Flynn": "Faber",
+            "Seth Gould": "Faber",
+            "Chaz Faletti": "Faber",
+            
+            // Team Gayle
+            "LiLi Gayle": "Gayle",
+            "Ian Kirsch": "Gayle",
+            "Aidan Walsh": "Gayle",
+            "Jackson Fanelli": "Gayle",
+            "Anish Ghana": "Gayle",
+            "Ava Mollaghan": "Gayle",
+            "Bobby Bammann": "Gayle",
+            "Tate Sweatt": "Gayle",
+            "Carli Bowen": "Gayle",
+            "Connor Lowery": "Gayle",
+            "Delilah Mills": "Gayle",
+            "Gabe Guisti": "Gayle",
+            "Grace Johnson": "Gayle",
+            "JP Patella": "Gayle",
+            "Rishi Patel": "Gayle",
+            "Hanna Fay": "Gayle",
+            "Nick Magnotta": "Gayle",
+            "Quintan Boyle": "Gayle",
+            "Nandini Wagle": "Gayle",
+            "Owings Holler": "Gayle",
+            "VB Trost": "Gayle",
+            "Thelma Zaw": "Gayle",
+            "Sophia Hemsey": "Gayle",
+            "Rylee Cauthren": "Gayle",
+            
+            // Team Mcintosh
+            "Austin McIntosh": "Mcintosh",
+            "Aidan Welch": "Mcintosh",
+            "Alessia Pesce": "Mcintosh",
+            "Antonio Kirylo": "Mcintosh",
+            "Arav Patel": "Mcintosh",
+            "Ava Wickberg": "Mcintosh",
+            "Caleb Dozier": "Mcintosh",
+            "Caitlin Croci": "Mcintosh",
+            "Cooper Johnston": "Mcintosh",
+            "Dylan Cobb": "Mcintosh",
+            "Emme Muller": "Mcintosh",
+            "Gavin Farbman": "Mcintosh",
+            "Julia Perri": "Mcintosh",
+            "Lauren Sebestyen": "Mcintosh",
+            "Nick Fontanella": "Mcintosh",
+            "Natalia Berti": "Mcintosh",
+            "Rafael Freitas": "Mcintosh",
+            "Jack Purcaro": "Mcintosh",
+            "Tim Woodley": "Mcintosh",
+            "Tommy Marvin": "Mcintosh",
+            "Rahi Gajjar": "Mcintosh",
+            "Taryn Chase": "Mcintosh",
+            "Emily Carr": "Mcintosh",
+            "Erin McCauley": "Mcintosh",
+            
+            // Team Skibbie
+            "Grace Skibbie": "Skibbie",
+            "Alex Alleyne": "Skibbie",
+            "Ashley Reynolds": "Skibbie",
+            "Becca Moore": "Skibbie",
+            "Brian Cohn": "Skibbie",
+            "Caroline Harris": "Skibbie",
+            "Eli Chang": "Skibbie",
+            "David Gerth": "Skibbie",
+            "Emmet Johnson": "Skibbie",
+            "Esri Lowe": "Skibbie",
+            "Hailey Hicks": "Skibbie",
+            "Hunter Kahle": "Skibbie",
+            "Ahmed Elmahdi": "Skibbie",
+            "Isabella Silvis": "Skibbie",
+            "Olivia Myers": "Skibbie",
+            "Quinn Lovette": "Skibbie",
+            "Ryan Ayers": "Skibbie",
+            "Lucas Bruns": "Skibbie",
+            "Bry Hogan": "Skibbie",
+            "Emma Fitzsimmons": "Skibbie",
+            "Ryan Trahan": "Skibbie",
+            "Grantland Rogers": "Skibbie",
+            "Cam Overton": "Skibbie",
+            "Luke Ribar": "Skibbie"
+        };
+        
+        // Cross-team partnerships
         const partnerPairings = {
-            "Abrianna Reaves": "Ian Kirsch",
-            "Ahmed Elmahdi": "Tyler Faber",
-            "Aidan Campbell": "Nandini Wagle",
-            "Aidan Walsh": "Rishi Patel",
-            "Aidan Welch": "Seth Gould",
-            "Alessia Pesce": "Tanner Torrey",
-            "Alex Alleyne": "Ava Wickberg",
-            "Alex Mancuso": "Tim Woodley",
-            "Allie Flynn": "Kharis Greear",
-            "Amanda Collins": "Taryn Chase",
-            "Anish Ghana": "Gavin Farbman",
-            "Antonio Kirylo": "Emma Fitzsimmons",
-            "Arav Patel": "Nick Fontanella",
-            "Ashley Reynolds": "Cam Overton",
-            "Austin McIntosh": "Quintan Boyle",
-            "Ava Mollaghan": "Brian Cohn",
-            "Ava Wickberg": "Alex Alleyne",
-            "Becca Moore": "Geoffrey Tocco",
-            "Benjamin Sheehan": "Caroline Harris",
-            "Bobby Bammann": "Emme Muller",
-            "Brian Cohn": "Ava Mollaghan",
-            "Brooke Thurman": "Evan Hayden",
-            "Bry Hogan": "David Gerth",
-            "Caitlin Croci": "Julia Perri",
-            "Caleb Dozier": "Owings Holler",
-            "Cam Overton": "Ashley Reynolds",
-            "Carli Bowen": "Jack Purcaro",
-            "Caroline Harris": "Benjamin Sheehan",
-            "Chaz Faletti": "Tommy Marvin",
-            "Connor Autera": "Stergos Trintis",
-            "Connor Lowery": "Ryan Trahan",
-            "Cooper Johnston": "Isabella Silvis",
-            "Dalton Kahl": "LiLi Gayle",
-            "David Gerth": "Bry Hogan",
-            "Delilah Mills": "Luke Ribar",
-            "Dylan Cobb": "Grantland Rogers",
-            "Eli Chang": "Quinn Lovette",
-            "Emily Carr": "Ryan St.Clair",
-            "Emma Blanton": "Sophia Hemsey",
-            "Emma Fitzsimmons": "Antonio Kirylo",
-            "Emme Muller": "Bobby Bammann",
-            "Emmet Johnson": "Rylee Cauthren",
-            "Erin McCauley": "Rahi Gajjar",
-            "Esri Lowe": "Hanna Fay",
-            "Evan Hayden": "Brooke Thurman",
-            "Gabe Guisti": "Grace Johnson",
-            "Gavin Farbman": "Anish Ghana",
-            "Geoffrey Tocco": "Becca Moore",
-            "Grace Johnson": "Gabe Guisti",
-            "Grace Skibbie": "Morgan Ellison",
-            "Grantland Rogers": "Dylan Cobb",
-            "Hailey Hicks": "Rafael Freitas",
-            "Hanna Fay": "Esri Lowe",
-            "Hunter Kahle": "Katie McMahon",
-            "Ian Kirsch": "Abrianna Reaves",
-            "Isabella Silvis": "Cooper Johnston",
-            "Jack Purcaro": "Carli Bowen",
-            "Jackson Fanelli": "Mason Adams",
-            "Jacob Lotter": "Olivia Myers",
-            "JP Patella": "Lucas Bruns",
-            "Julia Perri": "Caitlin Croci",
-            "Katie McMahon": "Hunter Kahle",
-            "Kharis Greear": "Allie Flynn",
-            "Lauren Sebestyen": "Ryan Ayers",
-            "LiLi Gayle": "Dalton Kahl",
-            "Lucas Bruns": "JP Patella",
-            "Luke Ribar": "Delilah Mills",
-            "Mason Adams": "Jackson Fanelli",
-            "Morgan Ellison": "Grace Skibbie",
-            "Nandini Wagle": "Aidan Campbell",
-            "Natalia Berti": "Thelma Zaw",
-            "Nick Fontanella": "Arav Patel",
-            "Nick Magnotta": "Tate Sweatt",
-            "Olivia Myers": "Jacob Lotter",
-            "Owings Holler": "Caleb Dozier",
-            "Quinn Lovette": "Eli Chang",
-            "Quintan Boyle": "Austin McIntosh",
-            "Rafael Freitas": "Hailey Hicks",
-            "Rahi Gajjar": "Erin McCauley",
-            "Rishi Patel": "Aidan Walsh",
-            "Ryan Ayers": "Lauren Sebestyen",
-            "Ryan St.Clair": "Emily Carr",
-            "Ryan Trahan": "Connor Lowery",
-            "Rylee Cauthren": "Emmet Johnson",
-            "Seth Gould": "Aidan Welch",
-            "Sophia Hemsey": "Emma Blanton",
-            "Stergos Trintis": "Connor Autera",
-            "Tanner Torrey": "Alessia Pesce",
-            "Taryn Chase": "Amanda Collins",
-            "Tate Sweatt": "Nick Magnotta",
-            "Thelma Zaw": "Natalia Berti",
-            "Tim Woodley": "Alex Mancuso",
-            "Tommy Marvin": "Chaz Faletti",
-            "Tyler Faber": "Ahmed Elmahdi",
-            "VB Trost": "VB Trost" // Odd number, so they partner with themselves
+            // TEAM FABER members partnered with non-Faber members
+            "Tyler Faber": "Austin McIntosh", // Faber → Mcintosh
+            "Abrianna Reaves": "Aidan Welch", // Faber → Mcintosh
+            "Aidan Campbell": "Alessia Pesce", // Faber → Mcintosh
+            "Alex Mancuso": "Antonio Kirylo", // Faber → Mcintosh
+            "Amanda Collins": "Arav Patel", // Faber → Mcintosh
+            "Dalton Kahl": "Ava Wickberg", // Faber → Mcintosh
+            "Brooke Thurman": "Caleb Dozier", // Faber → Mcintosh
+            "Connor Autera": "Caitlin Croci", // Faber → Mcintosh
+            "Benjamin Sheehan": "Cooper Johnston", // Faber → Mcintosh
+            "Emma Blanton": "Dylan Cobb", // Faber → Mcintosh
+            "Evan Hayden": "Emme Muller", // Faber → Mcintosh
+            "Geoffrey Tocco": "Gavin Farbman", // Faber → Mcintosh
+            "Jacob Lotter": "Ahmed Elmahdi", // Faber → Skibbie
+            "Morgan Ellison": "Alex Alleyne", // Faber → Skibbie
+            "Kharis Greear": "Ashley Reynolds", // Faber → Skibbie
+            "Ryan St.Clair": "Becca Moore", // Faber → Skibbie
+            "Stergos Trintis": "Brian Cohn", // Faber → Skibbie
+            "Tanner Torrey": "Caroline Harris", // Faber → Skibbie
+            "Katie McMahon": "Eli Chang", // Faber → Skibbie
+            "Mason Adams": "David Gerth", // Faber → Skibbie
+            "Allie Flynn": "Esri Lowe", // Faber → Skibbie
+            "Seth Gould": "Hailey Hicks", // Faber → Skibbie
+            "Chaz Faletti": "Hunter Kahle", // Faber → Skibbie
+            
+            // TEAM MCINTOSH members partnered with non-Mcintosh members
+            "Austin McIntosh": "Tyler Faber", // Mcintosh → Faber (reciprocal)
+            "Aidan Welch": "Abrianna Reaves", // Mcintosh → Faber (reciprocal)
+            "Alessia Pesce": "Aidan Campbell", // Mcintosh → Faber (reciprocal)
+            "Antonio Kirylo": "Alex Mancuso", // Mcintosh → Faber (reciprocal)
+            "Arav Patel": "Amanda Collins", // Mcintosh → Faber (reciprocal)
+            "Ava Wickberg": "Dalton Kahl", // Mcintosh → Faber (reciprocal)
+            "Caleb Dozier": "Brooke Thurman", // Mcintosh → Faber (reciprocal)
+            "Caitlin Croci": "Connor Autera", // Mcintosh → Faber (reciprocal)
+            "Cooper Johnston": "Benjamin Sheehan", // Mcintosh → Faber (reciprocal)
+            "Dylan Cobb": "Emma Blanton", // Mcintosh → Faber (reciprocal)
+            "Emme Muller": "Evan Hayden", // Mcintosh → Faber (reciprocal)
+            "Gavin Farbman": "Geoffrey Tocco", // Mcintosh → Faber (reciprocal)
+            "Julia Perri": "LiLi Gayle", // Mcintosh → Gayle
+            "Lauren Sebestyen": "Ian Kirsch", // Mcintosh → Gayle
+            "Nick Fontanella": "Aidan Walsh", // Mcintosh → Gayle
+            "Natalia Berti": "Anish Ghana", // Mcintosh → Gayle
+            "Rafael Freitas": "Ava Mollaghan", // Mcintosh → Gayle
+            "Jack Purcaro": "Bobby Bammann", // Mcintosh → Gayle
+            "Tim Woodley": "Carli Bowen", // Mcintosh → Gayle
+            "Tommy Marvin": "Connor Lowery", // Mcintosh → Gayle
+            "Rahi Gajjar": "Delilah Mills", // Mcintosh → Gayle
+            "Taryn Chase": "Gabe Guisti", // Mcintosh → Gayle
+            "Emily Carr": "Grace Johnson", // Mcintosh → Gayle
+            // "Erin McCauley" part of the cross-team trio
+            
+            // TEAM SKIBBIE members partnered with non-Skibbie members
+            "Ahmed Elmahdi": "Jacob Lotter", // Skibbie → Faber (reciprocal)
+            "Alex Alleyne": "Morgan Ellison", // Skibbie → Faber (reciprocal)
+            "Ashley Reynolds": "Kharis Greear", // Skibbie → Faber (reciprocal)
+            "Becca Moore": "Ryan St.Clair", // Skibbie → Faber (reciprocal)
+            "Brian Cohn": "Stergos Trintis", // Skibbie → Faber (reciprocal)
+            "Caroline Harris": "Tanner Torrey", // Skibbie → Faber (reciprocal)
+            "Eli Chang": "Katie McMahon", // Skibbie → Faber (reciprocal)
+            "David Gerth": "Mason Adams", // Skibbie → Faber (reciprocal)
+            "Esri Lowe": "Allie Flynn", // Skibbie → Faber (reciprocal)
+            "Hailey Hicks": "Seth Gould", // Skibbie → Faber (reciprocal)
+            "Hunter Kahle": "Chaz Faletti", // Skibbie → Faber (reciprocal)
+            "Isabella Silvis": "JP Patella", // Skibbie → Gayle
+            "Olivia Myers": "Rishi Patel", // Skibbie → Gayle
+            "Quinn Lovette": "Hanna Fay", // Skibbie → Gayle
+            "Ryan Ayers": "Nick Magnotta", // Skibbie → Gayle
+            "Lucas Bruns": "Quintan Boyle", // Skibbie → Gayle
+            "Bry Hogan": "Nandini Wagle", // Skibbie → Gayle
+            "Emma Fitzsimmons": "Owings Holler", // Skibbie → Gayle
+            "Ryan Trahan": "Tate Sweatt", // Skibbie → Gayle
+            "Grantland Rogers": "Thelma Zaw", // Skibbie → Gayle
+            "Cam Overton": "Sophia Hemsey", // Skibbie → Gayle
+            "Luke Ribar": "Jackson Fanelli", // Skibbie → Gayle
+            // "Grace Skibbie" part of the cross-team trio
+            
+            // TEAM GAYLE members partnered with non-Gayle members
+            "LiLi Gayle": "Julia Perri", // Gayle → Mcintosh (reciprocal)
+            "Ian Kirsch": "Lauren Sebestyen", // Gayle → Mcintosh (reciprocal)
+            "Aidan Walsh": "Nick Fontanella", // Gayle → Mcintosh (reciprocal)
+            "Anish Ghana": "Natalia Berti", // Gayle → Mcintosh (reciprocal)
+            "Ava Mollaghan": "Rafael Freitas", // Gayle → Mcintosh (reciprocal)
+            "Bobby Bammann": "Jack Purcaro", // Gayle → Mcintosh (reciprocal)
+            "Carli Bowen": "Tim Woodley", // Gayle → Mcintosh (reciprocal)
+            "Connor Lowery": "Tommy Marvin", // Gayle → Mcintosh (reciprocal)
+            "Delilah Mills": "Rahi Gajjar", // Gayle → Mcintosh (reciprocal)
+            "Gabe Guisti": "Taryn Chase", // Gayle → Mcintosh (reciprocal)
+            "Grace Johnson": "Emily Carr", // Gayle → Mcintosh (reciprocal)
+            "JP Patella": "Isabella Silvis", // Gayle → Skibbie (reciprocal)
+            "Rishi Patel": "Olivia Myers", // Gayle → Skibbie (reciprocal)
+            "Hanna Fay": "Quinn Lovette", // Gayle → Skibbie (reciprocal)
+            "Nick Magnotta": "Ryan Ayers", // Gayle → Skibbie (reciprocal)
+            "Quintan Boyle": "Lucas Bruns", // Gayle → Skibbie (reciprocal)
+            "Nandini Wagle": "Bry Hogan", // Gayle → Skibbie (reciprocal)
+            "Owings Holler": "Emma Fitzsimmons", // Gayle → Skibbie (reciprocal)
+            "Tate Sweatt": "Ryan Trahan", // Gayle → Skibbie (reciprocal)
+            "Thelma Zaw": "Grantland Rogers", // Gayle → Skibbie (reciprocal)
+            "Sophia Hemsey": "Cam Overton", // Gayle → Skibbie (reciprocal)
+            "Jackson Fanelli": "Luke Ribar", // Gayle → Skibbie (reciprocal)
+            // "VB Trost" part of the cross-team trio
+            // "Rylee Cauthren" part of the cross-team trio
+            
+            // CROSS-TEAM TRIO (one from each team: Gayle, Mcintosh, and Skibbie)
+            // VB Trost (Gayle) → Erin McCauley (Mcintosh) → Grace Skibbie (Skibbie) → VB Trost (Gayle)
+            "VB Trost": "Erin McCauley", // Gayle → Mcintosh (trio)
+            "Erin McCauley": "Grace Skibbie", // Mcintosh → Skibbie (trio)
+            "Grace Skibbie": "VB Trost", // Skibbie → Gayle (trio)
         };
         
         // DOM elements
-        var nameSelect = document.getElementById('nameSelect');
-        var statsDiv = document.getElementById('stats');
-        var loadingIndicator = document.getElementById('loadingIndicator');
-        var noSubmissions = document.getElementById('noSubmissions');
-        var todayCount = document.getElementById('todayCount');
-        var totalCount = document.getElementById('totalCount');
-        var teamName = document.getElementById('teamName');
-        var todayProgress = document.getElementById('todayProgress');
-        var historyList = document.getElementById('historyList');
-        var indexNotice = document.getElementById('indexNotice');
-        var moneyRaised = document.getElementById('moneyRaised');
-        var moneyValue = document.getElementById('moneyValue');
-        var moneyProgress = document.getElementById('moneyProgress');
-        var moneyToDonate = document.getElementById('moneyToDonate');
-        var donationValue = document.getElementById('donationValue');
-        var donationProgress = document.getElementById('donationProgress');
-        var partnerDonor = document.getElementById('partnerDonor');
-        var partnerRecipient = document.getElementById('partnerRecipient');
-        var viewPartnerBtn = document.getElementById('viewPartnerBtn');
+        const nameSelect = document.getElementById('nameSelect');
+        const statsDiv = document.getElementById('stats');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noSubmissions = document.getElementById('noSubmissions');
+        const todayCount = document.getElementById('todayCount');
+        const totalCount = document.getElementById('totalCount');
+        const teamName = document.getElementById('teamName');
+        const todayProgress = document.getElementById('todayProgress');
+        const historyList = document.getElementById('historyList');
+        const indexNotice = document.getElementById('indexNotice');
+        const moneyRaised = document.getElementById('moneyRaised');
+        const moneyValue = document.getElementById('moneyValue');
+        const moneyProgress = document.getElementById('moneyProgress');
+        const moneyToDonate = document.getElementById('moneyToDonate');
+        const donationValue = document.getElementById('donationValue');
+        const donationProgress = document.getElementById('donationProgress');
+        const partnerBenefitsFrom = document.getElementById('partnerBenefitsFrom');
+        const partnerDonatesFor = document.getElementById('partnerDonatesFor');
+        const viewBenefitsBtn = document.getElementById('viewBenefitsBtn');
+        const viewDonatesBtn = document.getElementById('viewDonatesBtn');
         
         // Constants
         const MONEY_PER_SUBMISSION = 0.50;
         const MAX_MONEY_GOAL = 30;
         
-        // Current selected person and their partner
-        var currentPerson = '';
-        var currentPartner = '';
+        // Current selected person and their partners
+        let currentPerson = '';
+        let currentDonatesFor = '';
+        let currentBenefitsFrom = '';
+        
+        // Special handling for the cross-team trio partnership
+        function getTrio(name) {
+            // The cross-team trio: VB Trost (Gayle), Erin McCauley (Mcintosh), and Grace Skibbie (Skibbie)
+            const trioMembers = {
+                "VB Trost": {
+                    donatesFor: "Erin McCauley",
+                    benefitsFrom: "Grace Skibbie",
+                    team: "Gayle"
+                },
+                "Erin McCauley": {
+                    donatesFor: "Grace Skibbie",
+                    benefitsFrom: "VB Trost",
+                    team: "Mcintosh"
+                },
+                "Grace Skibbie": {
+                    donatesFor: "VB Trost",
+                    benefitsFrom: "Erin McCauley",
+                    team: "Skibbie"
+                }
+            };
+            
+            return trioMembers[name];
+        }
         
         // Populate name dropdown
         function populateNameDropdown() {
@@ -635,9 +783,16 @@
             
             // Add to dropdown
             memberRoster.forEach(member => {
-                var option = document.createElement('option');
+                const option = document.createElement('option');
                 option.value = member.name;
                 option.textContent = member.name;
+                
+                // Store team information if available
+                const team = teamAssignments[member.name];
+                if (team) {
+                    option.dataset.team = team;
+                }
+                
                 nameSelect.appendChild(option);
             });
         }
@@ -663,7 +818,24 @@
             if (!userName) return;
             
             currentPerson = userName;
-            currentPartner = partnerPairings[userName] || "No partner assigned";
+            
+            // Handle the trio partnership specially
+            const trioInfo = getTrio(userName);
+            if (trioInfo) {
+                // For trio members, use the special benefitsFrom/donatesFor relationship
+                currentDonatesFor = trioInfo.donatesFor;
+                currentBenefitsFrom = trioInfo.benefitsFrom;
+            } else {
+                // Normal partnerships
+                currentDonatesFor = partnerPairings[userName] || "No partner assigned";
+                
+                // Find who donates for them (whose value equals their name)
+                currentBenefitsFrom = Object.entries(partnerPairings)
+                    .find(([partner, beneficiary]) => beneficiary === userName)?.[0] || "No partner assigned";
+            }
+            
+            // Get team from assignment list
+            const userTeam = teamAssignments[userName] || "";
             
             // Show loading
             statsDiv.style.display = 'none';
@@ -672,65 +844,84 @@
             loadingIndicator.style.display = 'block';
             
             // Update partner information
-            partnerDonor.textContent = currentPartner;
-            partnerRecipient.textContent = currentPartner;
+            partnerBenefitsFrom.textContent = currentBenefitsFrom;
+            partnerDonatesFor.textContent = currentDonatesFor;
             
-            // Update View Partner button
-            viewPartnerBtn.setAttribute('data-partner', currentPartner);
-            viewPartnerBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const partnerName = this.getAttribute('data-partner');
-                if (partnerName && partnerName !== "No partner assigned") {
-                    nameSelect.value = partnerName;
-                    loadUserSubmissions(partnerName);
-                }
-            });
+            // Update partner navigation buttons
+            viewBenefitsBtn.setAttribute('data-partner', currentBenefitsFrom);
+            viewDonatesBtn.setAttribute('data-partner', currentDonatesFor);
             
             // Get today's date in YYYY-MM-DD format
-            var today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
             
-            // Promise for loading the current person's submissions
-            const userPromise = db.collection('submissions')
+            // First check if user has any submissions
+            db.collection('submissions')
                 .where('name', '==', userName)
                 .limit(1)
                 .get()
                 .then(snapshot => {
-                    // If there are submissions, get the full ordered list
-                    if (!snapshot.empty) {
+                    // If no submissions, show the no submissions message
+                    if (snapshot.empty) {
+                        loadingIndicator.style.display = 'none';
+                        
+                        // Still show partner info even if no submissions
+                        statsDiv.style.display = 'block';
+                        teamName.textContent = userTeam || 'Not assigned';
+                        totalCount.textContent = '0';
+                        todayCount.textContent = '0';
+                        moneyRaised.textContent = '$0.00';
+                        moneyValue.textContent = '0.00';
+                        moneyProgress.style.width = '0%';
+                        historyList.innerHTML = '<p>No submission history available</p>';
+                        
+                        // Check partner's submissions for donation amount
                         return db.collection('submissions')
-                            .where('name', '==', userName)
-                            .orderBy('timestamp', 'desc')
+                            .where('name', '==', currentDonatesFor)
                             .get();
                     }
-                    return { empty: true, docs: [] };
-                });
-            
-            // Promise for loading the partner's submissions
-            const partnerPromise = db.collection('submissions')
-                .where('name', '==', currentPartner)
-                .limit(1)
-                .get()
-                .then(snapshot => {
-                    // If there are submissions, count them
-                    if (!snapshot.empty) {
-                        return db.collection('submissions')
-                            .where('name', '==', currentPartner)
-                            .get();
-                    }
-                    return { empty: true, docs: [] };
-                });
-            
-            // Execute both promises
-            Promise.all([userPromise, partnerPromise])
-                .then(([userSnapshot, partnerSnapshot]) => {
-                    // Handle user data
-                    var submissions = [];
-                    var todaySubmissions = 0;
-                    var latestTeam = '';
                     
-                    if (!userSnapshot.empty) {
+                    // If there are submissions, proceed with full queries
+                    // Promise for user's submissions
+                    const userPromise = db.collection('submissions')
+                        .where('name', '==', userName)
+                        .orderBy('timestamp', 'desc')
+                        .get();
+                    
+                    // Promise for partner's submissions (the person they donate for)
+                    const partnerPromise = db.collection('submissions')
+                        .where('name', '==', currentDonatesFor)
+                        .get();
+                    
+                    // Execute both promises
+                    return Promise.all([userPromise, partnerPromise, false]);
+                })
+                .then(results => {
+                    // Handle partner submissions for user with no submissions
+                    if (!Array.isArray(results)) {
+                        // This is the response from the partner submissions query when user has no submissions
+                        const partnerSnapshot = results;
+                        const partnerSubmissions = partnerSnapshot.size;
+                        const donationAmount = partnerSubmissions * MONEY_PER_SUBMISSION;
+                        
+                        moneyToDonate.textContent = '$' + formatMoney(donationAmount);
+                        donationValue.textContent = formatMoney(donationAmount);
+                        
+                        const donationProgressPercent = Math.min(donationAmount / MAX_MONEY_GOAL * 100, 100);
+                        donationProgress.style.width = donationProgressPercent + '%';
+                        
+                        return;
+                    }
+                    
+                    const [userSnapshot, partnerSnapshot, noSubmissions] = results;
+                    
+                    if (noSubmissions === false) {
+                        // Process user data
+                        let submissions = [];
+                        let todaySubmissions = 0;
+                        let latestTeam = userTeam; // Use the pre-assigned team if available
+                        
                         userSnapshot.forEach(doc => {
-                            var data = doc.data();
+                            const data = doc.data();
                             submissions.push(data);
                             
                             // Count today's submissions
@@ -738,65 +929,63 @@
                                 todaySubmissions++;
                             }
                             
-                            // Get the team
+                            // Only update team if not already set from assignments
                             if (!latestTeam && data.team) {
                                 latestTeam = data.team;
                             }
                         });
-                    }
-                    
-                    // Handle partner data
-                    var partnerSubmissions = 0;
-                    
-                    if (!partnerSnapshot.empty) {
-                        partnerSubmissions = partnerSnapshot.docs.length;
-                    }
-                    
-                    // Calculate money values
-                    var totalMoney = submissions.length * MONEY_PER_SUBMISSION;
-                    var donationAmount = partnerSubmissions * MONEY_PER_SUBMISSION;
-                    
-                    // Update stats
-                    todayCount.textContent = todaySubmissions;
-                    totalCount.textContent = submissions.length;
-                    teamName.textContent = latestTeam || 'Not assigned';
-                    moneyRaised.textContent = '$' + formatMoney(totalMoney);
-                    moneyValue.textContent = formatMoney(totalMoney);
-                    moneyToDonate.textContent = '$' + formatMoney(donationAmount);
-                    donationValue.textContent = formatMoney(donationAmount);
-                    
-                    // Update progress bars
-                    var dailyProgressPercent = Math.min(todaySubmissions / 2 * 100, 100);
-                    todayProgress.style.width = dailyProgressPercent + '%';
-                    
-                    var moneyProgressPercent = Math.min(totalMoney / MAX_MONEY_GOAL * 100, 100);
-                    moneyProgress.style.width = moneyProgressPercent + '%';
-                    
-                    var donationProgressPercent = Math.min(donationAmount / MAX_MONEY_GOAL * 100, 100);
-                    donationProgress.style.width = donationProgressPercent + '%';
-                    
-                    // Clear history list
-                    historyList.innerHTML = '';
-                    
-                    // Show recent submissions (up to 10)
-                    if (submissions.length > 0) {
-                        var recentSubmissions = submissions.slice(0, 10);
-                        recentSubmissions.forEach(submission => {
-                            var historyItem = document.createElement('div');
-                            historyItem.className = 'history-item';
-                            
-                            var timestamp = submission.timestamp?.toDate() || new Date(submission.date);
-                            
-                            historyItem.innerHTML = `
-                                <div>${submission.team} Team</div>
-                                <div>${formatDate(timestamp)}</div>
-                            `;
-                            
-                            historyList.appendChild(historyItem);
-                        });
-                    } else {
-                        historyList.innerHTML = '<p>No submission history available</p>';
-                        noSubmissions.style.display = 'block';
+                        
+                        // Process partner data
+                        let partnerSubmissions = 0;
+                        if (partnerSnapshot && !partnerSnapshot.empty) {
+                            partnerSubmissions = partnerSnapshot.size;
+                        }
+                        
+                        // Calculate money values
+                        const totalMoney = submissions.length * MONEY_PER_SUBMISSION;
+                        const donationAmount = partnerSubmissions * MONEY_PER_SUBMISSION;
+                        
+                        // Update stats
+                        todayCount.textContent = todaySubmissions;
+                        totalCount.textContent = submissions.length;
+                        teamName.textContent = latestTeam || 'Not assigned';
+                        moneyRaised.textContent = '$' + formatMoney(totalMoney);
+                        moneyValue.textContent = formatMoney(totalMoney);
+                        moneyToDonate.textContent = '$' + formatMoney(donationAmount);
+                        donationValue.textContent = formatMoney(donationAmount);
+                        
+                        // Update progress bars
+                        const dailyProgressPercent = Math.min(todaySubmissions / 2 * 100, 100);
+                        todayProgress.style.width = dailyProgressPercent + '%';
+                        
+                        const moneyProgressPercent = Math.min(totalMoney / MAX_MONEY_GOAL * 100, 100);
+                        moneyProgress.style.width = moneyProgressPercent + '%';
+                        
+                        const donationProgressPercent = Math.min(donationAmount / MAX_MONEY_GOAL * 100, 100);
+                        donationProgress.style.width = donationProgressPercent + '%';
+                        
+                        // Clear history list
+                        historyList.innerHTML = '';
+                        
+                        // Show recent submissions (up to 10)
+                        const recentSubmissions = submissions.slice(0, 10);
+                        if (recentSubmissions.length > 0) {
+                            recentSubmissions.forEach(submission => {
+                                const historyItem = document.createElement('div');
+                                historyItem.className = 'history-item';
+                                
+                                const timestamp = submission.timestamp?.toDate() || new Date(submission.date);
+                                
+                                historyItem.innerHTML = `
+                                    <div>${submission.team} Team</div>
+                                    <div>${formatDate(timestamp)}</div>
+                                `;
+                                
+                                historyList.appendChild(historyItem);
+                            });
+                        } else {
+                            historyList.innerHTML = '<p>No submission history available</p>';
+                        }
                     }
                     
                     // Show stats
@@ -823,7 +1012,7 @@
         
         // Handle name selection change
         nameSelect.addEventListener('change', function() {
-            var selectedName = this.value;
+            const selectedName = this.value;
             if (selectedName) {
                 loadUserSubmissions(selectedName);
             } else {
@@ -833,9 +1022,29 @@
             }
         });
         
+        // Partner navigation buttons
+        viewBenefitsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const partnerName = this.getAttribute('data-partner');
+            if (partnerName && partnerName !== "No partner assigned") {
+                nameSelect.value = partnerName;
+                loadUserSubmissions(partnerName);
+            }
+        });
+        
+        viewDonatesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const partnerName = this.getAttribute('data-partner');
+            if (partnerName && partnerName !== "No partner assigned") {
+                nameSelect.value = partnerName;
+                loadUserSubmissions(partnerName);
+            }
+        });
+        
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             populateNameDropdown();
+            indexNotice.style.display = 'none';
         });
     </script>
 </body>

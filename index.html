@@ -19,7 +19,6 @@
             --skibbie-color: #27ae60;
             --mcintosh-color: #f39c12;
             --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --error-color: #d9534f;
         }
         
         body {
@@ -169,13 +168,6 @@
             background-color: var(--accent-color);
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 127, 47, 0.25);
-        }
-        
-        .submit-btn:disabled {
-            background-color: #93c9a3;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
         
         .preview-container {
@@ -358,28 +350,37 @@
         
         .error-message {
             background-color: rgba(217, 83, 79, 0.1);
-            color: var(--error-color);
+            color: #d9534f;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 30px;
             display: none !important; /* Force hide */
-            border-left: 4px solid var(--error-color);
+            border-left: 4px solid #d9534f;
             font-weight: 600;
         }
         
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 8px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+        .button-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .button {
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
         
         @media (max-width: 768px) {
@@ -408,6 +409,10 @@
             
             .page-container {
                 padding: 20px 10px;
+            }
+            
+            .button-row {
+                flex-direction: column;
             }
         }
     </style>
@@ -468,6 +473,10 @@
                 </div>
                 
                 <button type="submit" class="submit-btn">Submit Photo</button>
+                
+                <div class="button-row">
+                    <a href="tracker.html" class="button">View My Submissions</a>
+                </div>
             </form>
             
             <div class="leaderboard">
@@ -536,46 +545,25 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    <!-- Firebase Configuration -->
     <script>
-        // Your Firebase configuration (replace with yours from the Firebase console)
+        // Firebase configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
-  authDomain: "march-to-muscles.firebaseapp.com",
-  projectId: "march-to-muscles",
-  storageBucket: "march-to-muscles.firebasestorage.app",
-  messagingSenderId: "591055422160",
-  appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
-  measurementId: "G-1Q4BDVWFX8"
-};
-
+            apiKey: "AIzaSyB0JKlMcYSmVMmyibVDbPftx7y3BYw1nqY",
+            authDomain: "march-to-muscles.firebaseapp.com",
+            projectId: "march-to-muscles",
+            storageBucket: "march-to-muscles.firebasestorage.app",
+            messagingSenderId: "591055422160",
+            appId: "1:591055422160:web:e5c3f283ebf246013b54d5",
+            measurementId: "G-1Q4BDVWFX8"
+        };
+        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
-        const auth = firebase.auth();
         
-        // Sign in anonymously (no user accounts needed)
-        auth.signInAnonymously().catch(error => {
-            console.error("Authentication error:", error);
-        });
-    </script>
-
-    <script>
-        // Initialize variables
-        let currentUser = null;
-
-        // Listen for authentication state
-        firebase.auth().onAuthStateChanged(function(user) {
-            if (user) {
-                currentUser = user;
-                loadLeaderboardData();
-            }
-        });
-
-        // Member roster with all fraternity members
+        // Member roster
         const memberRoster = [
             {name: "Abrianna Reaves", team: ""},
             {name: "Ahmed Elmahdi", team: ""},
@@ -673,66 +661,203 @@
             {name: "Tyler Faber", team: ""},
             {name: "VB Trost", team: ""}
         ];
-
-        // Populate the name dropdown with the member roster
+        
+        // Complete team assignments for all four teams
+        const teamAssignments = {
+            // Team Faber
+            "Tyler Faber": "Faber",
+            "Abrianna Reaves": "Faber",
+            "Aidan Campbell": "Faber",
+            "Alex Mancuso": "Faber",
+            "Amanda Collins": "Faber",
+            "Dalton Kahl": "Faber",
+            "Brooke Thurman": "Faber",
+            "Connor Autera": "Faber",
+            "Benjamin Sheehan": "Faber",
+            "Emma Blanton": "Faber",
+            "Evan Hayden": "Faber",
+            "Geoffrey Tocco": "Faber",
+            "Jacob Lotter": "Faber",
+            "Morgan Ellison": "Faber",
+            "Kharis Greear": "Faber",
+            "Ryan St.Clair": "Faber",
+            "Stergos Trintis": "Faber",
+            "Tanner Torrey": "Faber",
+            "Katie McMahon": "Faber",
+            "Mason Adams": "Faber",
+            "Allie Flynn": "Faber",
+            "Seth Gould": "Faber",
+            "Chaz Faletti": "Faber",
+            
+            // Team Gayle
+            "LiLi Gayle": "Gayle",
+            "Ian Kirsch": "Gayle",
+            "Aidan Walsh": "Gayle",
+            "Jackson Fanelli": "Gayle",
+            "Anish Ghana": "Gayle",
+            "Ava Mollaghan": "Gayle",
+            "Bobby Bammann": "Gayle",
+            "Tate Sweatt": "Gayle",
+            "Carli Bowen": "Gayle",
+            "Connor Lowery": "Gayle",
+            "Delilah Mills": "Gayle",
+            "Gabe Guisti": "Gayle",
+            "Grace Johnson": "Gayle",
+            "JP Patella": "Gayle",
+            "Rishi Patel": "Gayle",
+            "Hanna Fay": "Gayle",
+            "Nick Magnotta": "Gayle",
+            "Quintan Boyle": "Gayle",
+            "Nandini Wagle": "Gayle",
+            "Owings Holler": "Gayle",
+            "VB Trost": "Gayle",
+            "Thelma Zaw": "Gayle",
+            "Sophia Hemsey": "Gayle",
+            "Rylee Cauthren": "Gayle",
+            
+            // Team Mcintosh
+            "Austin McIntosh": "Mcintosh",
+            "Aidan Welch": "Mcintosh",
+            "Alessia Pesce": "Mcintosh",
+            "Antonio Kirylo": "Mcintosh",
+            "Arav Patel": "Mcintosh",
+            "Ava Wickberg": "Mcintosh",
+            "Caleb Dozier": "Mcintosh",
+            "Caitlin Croci": "Mcintosh",
+            "Cooper Johnston": "Mcintosh",
+            "Dylan Cobb": "Mcintosh",
+            "Emme Muller": "Mcintosh",
+            "Gavin Farbman": "Mcintosh",
+            "Julia Perri": "Mcintosh",
+            "Lauren Sebestyen": "Mcintosh",
+            "Nick Fontanella": "Mcintosh",
+            "Natalia Berti": "Mcintosh",
+            "Rafael Freitas": "Mcintosh",
+            "Jack Purcaro": "Mcintosh",
+            "Tim Woodley": "Mcintosh",
+            "Tommy Marvin": "Mcintosh",
+            "Rahi Gajjar": "Mcintosh",
+            "Taryn Chase": "Mcintosh",
+            "Emily Carr": "Mcintosh",
+            "Erin McCauley": "Mcintosh",
+            
+            // Team Skibbie
+            "Grace Skibbie": "Skibbie",
+            "Alex Alleyne": "Skibbie",
+            "Ashley Reynolds": "Skibbie",
+            "Becca Moore": "Skibbie",
+            "Brian Cohn": "Skibbie",
+            "Caroline Harris": "Skibbie",
+            "Eli Chang": "Skibbie",
+            "David Gerth": "Skibbie",
+            "Emmet Johnson": "Skibbie",
+            "Esri Lowe": "Skibbie",
+            "Hailey Hicks": "Skibbie",
+            "Hunter Kahle": "Skibbie",
+            "Ahmed Elmahdi": "Skibbie",
+            "Isabella Silvis": "Skibbie",
+            "Olivia Myers": "Skibbie",
+            "Quinn Lovette": "Skibbie",
+            "Ryan Ayers": "Skibbie",
+            "Lucas Bruns": "Skibbie",
+            "Bry Hogan": "Skibbie",
+            "Emma Fitzsimmons": "Skibbie",
+            "Ryan Trahan": "Skibbie",
+            "Grantland Rogers": "Skibbie",
+            "Cam Overton": "Skibbie",
+            "Luke Ribar": "Skibbie"
+        };
+        
+        // DOM elements
+        const nameSelect = document.getElementById('name');
+        const teamSelect = document.getElementById('team');
+        const photoInput = document.getElementById('photoInput');
+        const fileName = document.getElementById('fileName');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const photoSubmissionForm = document.getElementById('photoSubmissionForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Initialize a database object for team counts
+        let database = {
+            teamCounts: {
+                "Gayle": 0,
+                "Faber": 0,
+                "Skibbie": 0,
+                "Mcintosh": 0
+            }
+        };
+        
+        // Populate name dropdown
         function populateNameDropdown() {
-            const nameDropdown = document.getElementById('name');
-            // Sort alphabetically by name
+            // Sort alphabetically
             memberRoster.sort((a, b) => a.name.localeCompare(b.name));
             
-            // Add all members to dropdown
+            // Add to dropdown
             memberRoster.forEach(member => {
                 const option = document.createElement('option');
                 option.value = member.name;
                 option.textContent = member.name;
-                nameDropdown.appendChild(option);
+                
+                // Add team data attribute if available
+                const team = teamAssignments[member.name];
+                if (team) {
+                    option.dataset.team = team;
+                }
+                
+                nameSelect.appendChild(option);
             });
         }
-
-        // Load leaderboard data from Firebase
-        async function loadLeaderboardData() {
-            try {
-                const teamsRef = db.collection('teams');
-                const snapshot = await teamsRef.get();
-                
-                const teamCounts = {
-                    "Gayle": 0,
-                    "Faber": 0,
-                    "Skibbie": 0,
-                    "Mcintosh": 0
-                };
-                
-                snapshot.forEach(doc => {
-                    if (teamCounts.hasOwnProperty(doc.id)) {
-                        teamCounts[doc.id] = doc.data().count || 0;
-                    }
-                });
-                
-                updateLeaderboard(teamCounts);
-            } catch (error) {
-                console.error('Error loading leaderboard data:', error);
+        
+        // Auto-select team based on name selection
+        nameSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const teamValue = selectedOption.dataset.team;
+            
+            if (teamValue) {
+                teamSelect.value = teamValue;
             }
-        }
-
+        });
+        
+        // File input handling
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            fileName.textContent = file ? file.name : 'No file chosen';
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+            }
+        });
+        
         // Update the leaderboard with current counts
-        function updateLeaderboard(teamCounts) {
+        function updateLeaderboard() {
             // Update the number displays
-            document.getElementById('teamGayleCount').textContent = teamCounts["Gayle"];
-            document.getElementById('teamFaberCount').textContent = teamCounts["Faber"];
-            document.getElementById('teamSkibbieCount').textContent = teamCounts["Skibbie"];
-            document.getElementById('teamMcintoshCount').textContent = teamCounts["Mcintosh"];
+            document.getElementById('teamGayleCount').textContent = database.teamCounts["Gayle"];
+            document.getElementById('teamFaberCount').textContent = database.teamCounts["Faber"];
+            document.getElementById('teamSkibbieCount').textContent = database.teamCounts["Skibbie"];
+            document.getElementById('teamMcintoshCount').textContent = database.teamCounts["Mcintosh"];
             
             // Update the bar chart
-            updateBarChart(teamCounts);
+            updateBarChart();
         }
-
+        
         // Update the bar chart visualization
-        function updateBarChart(teamCounts) {
+        function updateBarChart() {
             // Get values
-            const gayleCount = teamCounts["Gayle"];
-            const faberCount = teamCounts["Faber"];
-            const skibbieCount = teamCounts["Skibbie"];
-            const mcintoshCount = teamCounts["Mcintosh"];
+            const gayleCount = database.teamCounts["Gayle"];
+            const faberCount = database.teamCounts["Faber"];
+            const skibbieCount = database.teamCounts["Skibbie"];
+            const mcintoshCount = database.teamCounts["Mcintosh"];
             
             // Find the maximum value for scaling
             const maxCount = Math.max(
@@ -761,59 +886,38 @@
             document.getElementById('barSkibbieValue').textContent = skibbieCount;
             document.getElementById('barMcintoshValue').textContent = mcintoshCount;
         }
-
-        // File input handling
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'No file chosen';
-            document.getElementById('fileName').textContent = fileName;
-            
-            // Preview image
-            const preview = document.getElementById('imagePreview');
-            const placeholder = document.getElementById('previewPlaceholder');
-            const file = e.target.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.src = event.target.result;
-                    preview.style.display = 'block';
-                    placeholder.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.style.display = 'none';
-                placeholder.style.display = 'block';
-            }
-        });
-
-        // Check user's daily submissions
-        async function checkDailySubmissions(name) {
-            if (!name) return 0;
-            
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-            
+        
+        // Load data from Firestore
+        async function loadTeamCounts() {
             try {
-                const submissionsRef = db.collection('submissions');
-                const snapshot = await submissionsRef
-                    .where('name', '==', name)
-                    .where('date', '==', today)
-                    .get();
+                const teamsRef = db.collection('teams');
+                const snapshot = await teamsRef.get();
                 
-                return snapshot.size; // Number of submissions today
+                if (!snapshot.empty) {
+                    snapshot.forEach(doc => {
+                        const teamName = doc.id;
+                        const teamData = doc.data();
+                        
+                        if (database.teamCounts.hasOwnProperty(teamName)) {
+                            database.teamCounts[teamName] = teamData.count || 0;
+                        }
+                    });
+                    
+                    updateLeaderboard();
+                }
             } catch (error) {
-                console.error('Error checking submissions:', error);
-                return 0;
+                console.error("Error loading team counts:", error);
             }
         }
-
+        
         // Form submission
-        document.getElementById('photoSubmissionForm').addEventListener('submit', async function(e) {
+        photoSubmissionForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const name = document.getElementById('name').value;
-            const team = document.getElementById('team').value;
+            const name = nameSelect.value;
+            const team = teamSelect.value;
             const description = document.getElementById('description').value;
-            const photoFile = document.getElementById('photoInput').files[0];
+            const photoFile = photoInput.files[0];
             
             if (!name || !team || !photoFile) {
                 alert('Please fill out all required fields and select a photo.');
@@ -821,27 +925,32 @@
             }
             
             // Check for daily submission limit
-            const submissionCount = await checkDailySubmissions(name);
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
             
-            if (submissionCount >= 2) {
-                // Show error message
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.style.display = 'block';
-                
-                // Hide error message after 3 seconds
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-                
-                return; // Stop the submission
-            }
-            
             try {
+                // Check existing submissions for today
+                const submissionsRef = db.collection('submissions');
+                const dailySubmissions = await submissionsRef
+                    .where('name', '==', name)
+                    .where('date', '==', today)
+                    .get();
+                
+                if (dailySubmissions.size >= 2) {
+                    // Show error message
+                    errorMessage.style.display = 'block';
+                    
+                    // Hide error message after 3 seconds
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 3000);
+                    
+                    return; // Stop the submission
+                }
+                
                 // Show loading state
                 const submitBtn = document.querySelector('.submit-btn');
                 const originalBtnText = submitBtn.textContent;
-                submitBtn.innerHTML = "Uploading... <span class='loading-spinner'></span>";
+                submitBtn.textContent = "Uploading...";
                 submitBtn.disabled = true;
                 
                 // 1. Upload photo to Firebase Storage
@@ -857,8 +966,7 @@
                     description: description,
                     photoUrl: downloadURL,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    date: today,
-                    userId: currentUser ? currentUser.uid : null
+                    date: today
                 });
                 
                 // 3. Update team count
@@ -867,15 +975,17 @@
                     const teamDoc = await transaction.get(teamRef);
                     const currentCount = teamDoc.exists ? (teamDoc.data().count || 0) : 0;
                     transaction.set(teamRef, { count: currentCount + 1 }, { merge: true });
+                    
+                    // Update local count
+                    database.teamCounts[team] = currentCount + 1;
                 });
                 
                 // 4. Reset form and show success
-                document.getElementById('photoSubmissionForm').reset();
-                document.getElementById('fileName').textContent = 'No file chosen';
-                document.getElementById('imagePreview').style.display = 'none';
-                document.getElementById('previewPlaceholder').style.display = 'block';
+                photoSubmissionForm.reset();
+                fileName.textContent = 'No file chosen';
+                imagePreview.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
                 
-                const successMessage = document.getElementById('successMessage');
                 successMessage.style.display = 'block';
                 
                 // Hide success message after 3 seconds
@@ -884,10 +994,10 @@
                 }, 3000);
                 
                 // 5. Refresh leaderboard
-                loadLeaderboardData();
+                updateLeaderboard();
                 
                 // Reset button
-                submitBtn.innerHTML = originalBtnText;
+                submitBtn.textContent = originalBtnText;
                 submitBtn.disabled = false;
                 
             } catch (error) {
@@ -900,11 +1010,12 @@
                 submitBtn.disabled = false;
             }
         });
-
-        // Initialize the page
+        
+        // Initialize page
         window.addEventListener('load', function() {
             populateNameDropdown();
-            document.getElementById('errorMessage').style.display = 'none';
+            loadTeamCounts();
+            errorMessage.style.display = 'none';
         });
     </script>
 </body>
