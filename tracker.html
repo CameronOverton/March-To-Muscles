@@ -581,8 +581,7 @@
             "Rahi Gajjar": "Mcintosh",
             "Taryn Chase": "Mcintosh",
             "Emily Carr": "Mcintosh",
-            "Luke Ribar": "Mcintosh",
-            
+            "Luke Ribar": "Mcintosh", // Luke Ribar on Mcintosh team
             
             // Team Skibbie
             "Grace Skibbie": "Skibbie",
@@ -608,7 +607,7 @@
             "Ryan Trahan": "Skibbie",
             "Grantland Rogers": "Skibbie",
             "Cam Overton": "Skibbie",
-            "Erin McCauley": "Skibbie",
+            "Erin McCauley": "Skibbie" // Erin McCauley on Skibbie team
         };
         
         // Cross-team partnerships
@@ -662,7 +661,7 @@
             "Rahi Gajjar": "Delilah Mills", // Mcintosh → Gayle
             "Taryn Chase": "Gabe Guisti", // Mcintosh → Gayle
             "Emily Carr": "Grace Johnson", // Mcintosh → Gayle
-            // "Erin McCauley" part of the cross-team trio
+            "Luke Ribar": "Jackson Fanelli", // Mcintosh → Gayle
             
             // TEAM SKIBBIE members partnered with non-Skibbie members
             "Ahmed Elmahdi": "Jacob Lotter", // Skibbie → Faber (reciprocal)
@@ -686,8 +685,8 @@
             "Ryan Trahan": "Tate Sweatt", // Skibbie → Gayle
             "Grantland Rogers": "Thelma Zaw", // Skibbie → Gayle
             "Cam Overton": "Sophia Hemsey", // Skibbie → Gayle
-            "Luke Ribar": "Jackson Fanelli", // Skibbie → Gayle
-            // "Grace Skibbie" part of the cross-team trio
+            "Erin McCauley": "VB Trost", // Skibbie → Gayle (NEW)
+            "Grace Skibbie": "Rylee Cauthren", // Skibbie → Gayle (NEW)
             
             // TEAM GAYLE members partnered with non-Gayle members
             "LiLi Gayle": "Julia Perri", // Gayle → Mcintosh (reciprocal)
@@ -711,15 +710,9 @@
             "Tate Sweatt": "Ryan Trahan", // Gayle → Skibbie (reciprocal)
             "Thelma Zaw": "Grantland Rogers", // Gayle → Skibbie (reciprocal)
             "Sophia Hemsey": "Cam Overton", // Gayle → Skibbie (reciprocal)
-            "Jackson Fanelli": "Luke Ribar", // Gayle → Skibbie (reciprocal)
-            // "VB Trost" part of the cross-team trio
-            // "Rylee Cauthren" part of the cross-team trio
-            
-            // CROSS-TEAM TRIO (one from each team: Gayle, Mcintosh, and Skibbie)
-            // VB Trost (Gayle) → Erin McCauley (Mcintosh) → Grace Skibbie (Skibbie) → VB Trost (Gayle)
-            "VB Trost": "Erin McCauley", // Gayle → Mcintosh (trio)
-            "Erin McCauley": "Grace Skibbie", // Mcintosh → Skibbie (trio)
-            "Grace Skibbie": "VB Trost", // Skibbie → Gayle (trio)
+            "Jackson Fanelli": "Luke Ribar", // Gayle → Mcintosh (reciprocal)
+            "VB Trost": "Erin McCauley", // Gayle → Skibbie (NEW)
+            "Rylee Cauthren": "Grace Skibbie" // Gayle → Skibbie (NEW)
         };
         
         // DOM elements
@@ -752,30 +745,6 @@
         let currentPerson = '';
         let currentDonatesFor = '';
         let currentBenefitsFrom = '';
-        
-        // Special handling for the cross-team trio partnership
-        function getTrio(name) {
-            // The cross-team trio: VB Trost (Gayle), Erin McCauley (Mcintosh), and Grace Skibbie (Skibbie)
-            const trioMembers = {
-                "VB Trost": {
-                    donatesFor: "Erin McCauley",
-                    benefitsFrom: "Grace Skibbie",
-                    team: "Gayle"
-                },
-                "Erin McCauley": {
-                    donatesFor: "Grace Skibbie",
-                    benefitsFrom: "VB Trost",
-                    team: "Mcintosh"
-                },
-                "Grace Skibbie": {
-                    donatesFor: "VB Trost",
-                    benefitsFrom: "Erin McCauley",
-                    team: "Skibbie"
-                }
-            };
-            
-            return trioMembers[name];
-        }
         
         // Populate name dropdown
         function populateNameDropdown() {
@@ -820,20 +789,12 @@
             
             currentPerson = userName;
             
-            // Handle the trio partnership specially
-            const trioInfo = getTrio(userName);
-            if (trioInfo) {
-                // For trio members, use the special benefitsFrom/donatesFor relationship
-                currentDonatesFor = trioInfo.donatesFor;
-                currentBenefitsFrom = trioInfo.benefitsFrom;
-            } else {
-                // Normal partnerships
-                currentDonatesFor = partnerPairings[userName] || "No partner assigned";
-                
-                // Find who donates for them (whose value equals their name)
-                currentBenefitsFrom = Object.entries(partnerPairings)
-                    .find(([partner, beneficiary]) => beneficiary === userName)?.[0] || "No partner assigned";
-            }
+            // Normal partnerships
+            currentDonatesFor = partnerPairings[userName] || "No partner assigned";
+            
+            // Find who donates for them (whose value equals their name)
+            currentBenefitsFrom = Object.entries(partnerPairings)
+                .find(([partner, beneficiary]) => beneficiary === userName)?.[0] || "No partner assigned";
             
             // Get team from assignment list
             const userTeam = teamAssignments[userName] || "";
