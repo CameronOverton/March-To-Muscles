@@ -19,6 +19,8 @@
             --skibbie-color: #27ae60;
             --mcintosh-color: #f39c12;
             --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --charity-color: #3498db; /* Blue for St. Baldricks */
+            --winners-color: #e67e22; /* Orange for Winners Tab */
         }
         
         body {
@@ -320,6 +322,77 @@
             font-weight: bold;
             min-width: 40px;
         }
+
+        /* Funds stats styling */
+        .funds-container {
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            border-radius: 12px;
+            padding: 25px;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        .funds-header {
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .total-funds {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .funds-description {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .funds-allocation {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .allocation-item {
+            flex: 1;
+            max-width: 300px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .charity-item {
+            border-left: 5px solid var(--charity-color);
+        }
+
+        .winners-item {
+            border-left: 5px solid var(--winners-color);
+        }
+
+        .allocation-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .allocation-percent {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .allocation-amount {
+            font-size: 2rem;
+            font-weight: bold;
+        }
         
         @media (max-width: 768px) {
             .container {
@@ -341,6 +414,17 @@
             .team-total {
                 font-size: 1.8rem;
             }
+
+            .funds-allocation {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .allocation-item {
+                width: 100%;
+                max-width: none;
+            }
         }
     </style>
 </head>
@@ -354,6 +438,27 @@
             
             <div id="loadingIndicator" class="loading">
                 Loading team data and individual submissions...
+            </div>
+
+            <!-- Funds Raised Section -->
+            <div class="funds-container">
+                <h2 class="funds-header">Total Funds Raised</h2>
+                <div class="total-funds" id="totalFunds">$0.00</div>
+                <p class="funds-description">$0.50 raised per submission</p>
+                
+                <div class="funds-allocation">
+                    <div class="allocation-item charity-item">
+                        <div class="allocation-title">St. Baldricks</div>
+                        <div class="allocation-percent">75% of funds</div>
+                        <div class="allocation-amount" id="charityAmount">$0.00</div>
+                    </div>
+                    
+                    <div class="allocation-item winners-item">
+                        <div class="allocation-title">Winners' Tab</div>
+                        <div class="allocation-percent">25% of funds</div>
+                        <div class="allocation-amount" id="winnersAmount">$0.00</div>
+                    </div>
+                </div>
             </div>
             
             <!-- Team Overall Stats -->
@@ -445,6 +550,11 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        
+        // Constants for funds calculation
+        const MONEY_PER_SUBMISSION = 0.50;
+        const CHARITY_PERCENTAGE = 0.75;
+        const WINNERS_PERCENTAGE = 0.25;
         
         // Complete team assignments for all four teams
         const teamAssignments = {
@@ -555,6 +665,9 @@
         // DOM elements
         const loadingIndicator = document.getElementById('loadingIndicator');
         const teamsContainer = document.getElementById('teamsContainer');
+        const totalFundsElement = document.getElementById('totalFunds');
+        const charityAmountElement = document.getElementById('charityAmount');
+        const winnersAmountElement = document.getElementById('winnersAmount');
         
         // Initialize a database object for team counts and members
         let database = {
@@ -569,8 +682,38 @@
                 "Faber": {},
                 "Skibbie": {},
                 "Mcintosh": {}
-            }
+            },
+            totalCount: 0
         };
+        
+        // Format money amount
+        function formatMoney(amount) {
+            return '$' + amount.toFixed(2);
+        }
+        
+        // Calculate and update funds
+        function updateFundsDisplay() {
+            // Calculate total submissions
+            const totalSubmissions = 
+                database.teamCounts["Gayle"] + 
+                database.teamCounts["Faber"] + 
+                database.teamCounts["Skibbie"] + 
+                database.teamCounts["Mcintosh"];
+            
+            database.totalCount = totalSubmissions;
+            
+            // Calculate total funds raised
+            const totalFunds = totalSubmissions * MONEY_PER_SUBMISSION;
+            
+            // Calculate split funds
+            const charityAmount = totalFunds * CHARITY_PERCENTAGE;
+            const winnersAmount = totalFunds * WINNERS_PERCENTAGE;
+            
+            // Update the display
+            totalFundsElement.textContent = formatMoney(totalFunds);
+            charityAmountElement.textContent = formatMoney(charityAmount);
+            winnersAmountElement.textContent = formatMoney(winnersAmount);
+        }
         
         // Initialize teams structure from assignments
         function initializeTeamMembers() {
@@ -726,6 +869,7 @@
                 
                 // Update the visualizations
                 updateBarChart();
+                updateFundsDisplay();
                 renderTeamSections();
                 
                 // Hide loading indicator
