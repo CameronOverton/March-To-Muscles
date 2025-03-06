@@ -14,6 +14,7 @@
             --light-gray: #f0f9f4;
             --text-color: #284034;
             --success-color: #28a745;
+            --error-color: #d9534f;
             --gayle-color: #8e44ad;
             --faber-color: #e74c3c;
             --skibbie-color: #27ae60;
@@ -350,12 +351,12 @@
         
         .error-message {
             background-color: rgba(217, 83, 79, 0.1);
-            color: #d9534f;
+            color: var(--error-color);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 30px;
-            display: none !important; /* Force hide */
-            border-left: 4px solid #d9534f;
+            display: none; /* Removed !important to allow JS to toggle visibility */
+            border-left: 4px solid var(--error-color);
             font-weight: 600;
         }
         
@@ -819,6 +820,28 @@
                 teamSelect.value = teamValue;
             }
         });
+
+        // Check if user has reached their daily submission limit
+        async function checkDailySubmissionLimit(name) {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            try {
+                // Query submissions for the selected user from today
+                const submissionsRef = db.collection('submissions');
+                const dailySubmissions = await submissionsRef
+                    .where('name', '==', name)
+                    .where('date', '==', today)
+                    .get();
+                
+                return {
+                    reachedLimit: dailySubmissions.size >= 2,
+                    currentCount: dailySubmissions.size
+                };
+            } catch (error) {
+                console.error('Error checking submission limit:', error);
+                return { reachedLimit: false, currentCount: 0 };
+            }
+        }
         
         // File input handling
         photoInput.addEventListener('change', function(e) {
@@ -924,34 +947,34 @@
                 return;
             }
             
-            // Check for daily submission limit
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = "Checking...";
+            submitBtn.disabled = true;
             
             try {
-                // Check existing submissions for today
-                const submissionsRef = db.collection('submissions');
-                const dailySubmissions = await submissionsRef
-                    .where('name', '==', name)
-                    .where('date', '==', today)
-                    .get();
+                // Check for daily submission limit first
+                const { reachedLimit, currentCount } = await checkDailySubmissionLimit(name);
                 
-                if (dailySubmissions.size >= 2) {
+                if (reachedLimit) {
                     // Show error message
                     errorMessage.style.display = 'block';
                     
-                    // Hide error message after 3 seconds
+                    // Reset button state
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    // Hide error message after 5 seconds
                     setTimeout(() => {
                         errorMessage.style.display = 'none';
-                    }, 3000);
+                    }, 5000);
                     
                     return; // Stop the submission
                 }
                 
-                // Show loading state
-                const submitBtn = document.querySelector('.submit-btn');
-                const originalBtnText = submitBtn.textContent;
+                // Update button text for upload phase
                 submitBtn.textContent = "Uploading...";
-                submitBtn.disabled = true;
                 
                 // 1. Upload photo to Firebase Storage
                 const storageRef = storage.ref(`photos/${Date.now()}_${photoFile.name}`);
@@ -959,6 +982,7 @@
                 const downloadURL = await uploadTask.ref.getDownloadURL();
                 
                 // 2. Save submission to Firestore
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
                 const submissionRef = db.collection('submissions').doc();
                 await submissionRef.set({
                     name: name,
@@ -988,10 +1012,19 @@
                 
                 successMessage.style.display = 'block';
                 
-                // Hide success message after 3 seconds
+                // Show message about remaining submissions
+                const newCount = currentCount + 1;
+                const remainingSubmissions = 2 - newCount;
+                if (remainingSubmissions > 0) {
+                    successMessage.textContent = `Your photo has been successfully submitted! You have ${remainingSubmissions} submission${remainingSubmissions === 1 ? '' : 's'} left for today.`;
+                } else {
+                    successMessage.textContent = 'Your photo has been successfully submitted! You have reached your daily submission limit.';
+                }
+                
+                // Hide success message after 5 seconds
                 setTimeout(() => {
                     successMessage.style.display = 'none';
-                }, 3000);
+                }, 5000);
                 
                 // 5. Refresh leaderboard
                 updateLeaderboard();
@@ -1005,8 +1038,7 @@
                 alert('Error submitting your photo. Please try again.');
                 
                 // Reset button state
-                const submitBtn = document.querySelector('.submit-btn');
-                submitBtn.textContent = "Submit Photo";
+                submitBtn.textContent = originalBtnText;
                 submitBtn.disabled = false;
             }
         });
@@ -1015,7 +1047,52 @@
         window.addEventListener('load', function() {
             populateNameDropdown();
             loadTeamCounts();
+            
+            // Clear any previous messages
+            successMessage.style.display = 'none';
             errorMessage.style.display = 'none';
+
+            // Check if the user has already selected a name and if they've reached their daily limit
+            nameSelect.addEventListener('change', async function() {
+                const selectedName = this.value;
+                if (selectedName) {
+                    const { reachedLimit, currentCount } = await checkDailySubmissionLimit(selectedName);
+                    
+                    // Update submit button state based on submission count
+                    const submitBtn = document.querySelector('.submit-btn');
+                    if (reachedLimit) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = "Daily Limit Reached";
+                        errorMessage.style.display = 'block';
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Submit Photo";
+                        errorMessage.style.display = 'none';
+                        
+                        // Update remaining submissions info
+                        const remainingSubmissions = 2 - currentCount;
+                        if (currentCount > 0) {
+                            // Add a note about remaining submissions
+                            const noteEl = document.createElement('div');
+                            noteEl.className = 'remaining-note';
+                            noteEl.textContent = `You have ${remainingSubmissions} submission${remainingSubmissions === 1 ? '' : 's'} left for today.`;
+                            noteEl.style.color = 'var(--accent-color)';
+                            noteEl.style.marginTop = '5px';
+                            noteEl.style.fontWeight = 'bold';
+                            
+                            // Remove any existing note
+                            const existingNote = document.querySelector('.remaining-note');
+                            if (existingNote) {
+                                existingNote.remove();
+                            }
+                            
+                            // Add the note after the name field
+                            const nameField = document.querySelector('.form-group');
+                            nameField.appendChild(noteEl);
+                        }
+                    }
+                }
+            });
         });
     </script>
 </body>
