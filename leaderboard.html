@@ -420,8 +420,8 @@
             </div>
             
             <div class="button-row">
-                <a href="https://cameronoverton.github.io/March-To-Muscles/" class="button">Submit Workout</a>
-                <a href="https://cameronoverton.github.io/March-To-Muscles/tracker.html" class="button">Check Your Progress</a>
+                <a href="index.html" class="button">Submit Workout</a>
+                <a href="tracker.html" class="button">Check Your Progress</a>
             </div>
         </div>
     </div>
@@ -523,7 +523,7 @@
             "Rahi Gajjar": "Mcintosh",
             "Taryn Chase": "Mcintosh",
             "Emily Carr": "Mcintosh",
-            "Luke Ribar": "Mcintosh"
+            "Luke Ribar": "Mcintosh",
             
             // Team Skibbie
             "Grace Skibbie": "Skibbie",
@@ -549,6 +549,7 @@
             "Ryan Trahan": "Skibbie",
             "Grantland Rogers": "Skibbie",
             "Cam Overton": "Skibbie",
+            "Erin McCauley": "Skibbie"
         };
         
         // DOM elements
@@ -573,6 +574,12 @@
         
         // Initialize teams structure from assignments
         function initializeTeamMembers() {
+            // Reset all team members counts
+            Object.keys(database.teamMembers).forEach(team => {
+                database.teamMembers[team] = {};
+            });
+            
+            // Set each team member with initial count of 0
             Object.entries(teamAssignments).forEach(([name, team]) => {
                 if (database.teamMembers[team]) {
                     database.teamMembers[team][name] = 0;
@@ -626,7 +633,10 @@
         function renderTeamSections() {
             teamsContainer.innerHTML = '';
             
-            ['Gayle', 'Faber', 'Skibbie', 'Mcintosh'].forEach(teamName => {
+            // Team display order
+            const teamOrder = ['Gayle', 'Faber', 'Skibbie', 'Mcintosh'];
+            
+            teamOrder.forEach(teamName => {
                 const teamMembers = database.teamMembers[teamName];
                 const teamTotal = database.teamCounts[teamName];
                 
@@ -660,6 +670,17 @@
                     `;
                     membersList.appendChild(memberItem);
                 });
+                
+                // If no members have submitted yet, show a message
+                if (sortedMembers.length === 0) {
+                    const noSubmissionsMessage = document.createElement('div');
+                    noSubmissionsMessage.className = 'member-item';
+                    noSubmissionsMessage.innerHTML = `
+                        <span class="member-name">No submissions yet</span>
+                        <span class="member-count">0</span>
+                    `;
+                    membersList.appendChild(noSubmissionsMessage);
+                }
                 
                 // Assemble the team section
                 teamSection.appendChild(teamHeader);
@@ -716,8 +737,30 @@
             }
         }
         
+        // Add ability to refresh the data periodically
+        function setupDataRefresh() {
+            // Refresh every 5 minutes (300000 ms)
+            setInterval(loadSubmissionData, 300000);
+            
+            // Also add a manual refresh button
+            const refreshButton = document.createElement('button');
+            refreshButton.className = 'button';
+            refreshButton.textContent = 'Refresh Data';
+            refreshButton.style.marginLeft = '15px';
+            refreshButton.addEventListener('click', () => {
+                loadingIndicator.style.display = 'block';
+                loadingIndicator.textContent = 'Refreshing data...';
+                loadSubmissionData();
+            });
+            
+            document.querySelector('.button-row').appendChild(refreshButton);
+        }
+        
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', loadSubmissionData);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSubmissionData();
+            setupDataRefresh();
+        });
     </script>
 </body>
 </html>
