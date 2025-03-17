@@ -998,7 +998,7 @@
                 await db.runTransaction(async (transaction) => {
                     const teamDoc = await transaction.get(teamRef);
                     const currentCount = teamDoc.exists ? (teamDoc.data().count || 0) : 0;
-                    transaction.set(teamRef, { count: currentCount + 1 }, { merge: true });
+                    transaction.update(teamRef, { count: currentCount + 1 }, { merge: true });
                     
                     // Update local count
                     database.teamCounts[team] = currentCount + 1;
